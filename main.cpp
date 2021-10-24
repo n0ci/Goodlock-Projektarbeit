@@ -2,6 +2,9 @@
 #include <map>
 #include <tuple>
 
+// TODO: get locks/mutex to work, refactor with some OOP, fix several de/reference bugs, debug, examples, tests?
+
+
 class Set {
 public:
     std::map<char, int> mySet = std::map<char, int>();
@@ -187,7 +190,157 @@ public:
 };
 
 
+// Examples
+
+void example1(LG m){
+    auto x = 0;
+    auto y = 1;
+    auto t0 = 0;
+    auto t1 = 1;
+
+    m.init();
+
+    auto acqRel2 = [&m](int t, int a, int b){
+        m.acquire(t, a);
+        m.acquire(t, b);
+        m.release(t, b);
+        m.release(t, a);
+    };
+
+    acqRel2(t0, x, y);
+    acqRel2(t1, y, x);
+
+    m.info();
+    m.check();
+}
+
+void example2(LG m){
+    auto x = 0;
+    auto y = 1;
+    auto t0 = 0;
+    auto t1 = 1;
+
+    m.init();
+
+    // TODO: find Go channel alternative and implement accordingly
+
+    auto ch = 0;
+
+    auto acqRel2 = [&m](int t, int a, int b){
+        m.acquire(t, a);
+        m.acquire(t, b);
+        m.release(t, b);
+        m.release(t, a);
+    };
+
+    // TODO: find Goroutine alternative and implement accordingly
+    acqRel2(t0, x, y);
+    ch = 1;
+
+    ch = 0;
+
+    acqRel2(t1, y, x);
+
+    m.info();
+    m.check();
+}
+
+void example3(LG m){
+    auto x = 0;
+    auto y = 1;
+    auto z = 2;
+
+    auto t0 = 0;
+    auto t1 = 1;
+    auto t2 = 2;
+
+    m.init();
+
+    auto acqRel2 = [&m](int t, int a, int b){
+        m.acquire(t, a);
+        m.acquire(t, b);
+        m.release(t, b);
+        m.release(t, a);
+    };
+
+    // TODO: Goroutine
+
+    acqRel2(t0, x, y);
+    acqRel2(t1, y, z);
+    acqRel2(t2, z, x);
+
+    m.info();
+    m.check();
+
+    // TODO: find possibility to sleep, if necessary
+    // sleep 1 sec here
+}
+
+void example4(LG m){
+    auto x = 0;
+    auto y = 1;
+    auto z = 2;
+
+    auto t0 = 0;
+    auto t1 = 1;
+
+    m.init();
+
+    // TODO: Goroutine
+    m.acquire(t0, x);
+    m.acquire(t0, y);
+    m.acquire(t0, z);
+    m.release(t0, z);
+    m.release(t0, y);
+    m.release(t0, x);
+
+    m.acquire(t1, z);
+    m.acquire(t1, x);
+    m.release(t1, x);
+    m.release(t1, z);
+
+    // TODO: find possibility to sleep, if necessary
+    // sleep 1 sec here
+}
+
+void example5(LG m){
+    auto x = 0;
+    auto y = 1;
+    auto z = 2;
+
+    auto t0 = 0;
+    auto t1 = 1;
+
+    // TODO: Goroutine
+    m.acquire(t0, x);
+    m.acquire(t0, y);
+    m.acquire(t0, z);
+    m.release(t0, z);
+    m.release(t0, y);
+    m.release(t0, x);
+
+    m.acquire(t1, x);
+    m.acquire(t1, z);
+    m.acquire(t1, y);
+    m.release(t1, y);
+    m.release(t1, z);
+    m.release(t1, x);
+
+    m.info();
+    m.check();
+
+    // TODO: find possibility to sleep, if necessary
+    // sleep 1 sec here
+}
+
+
+
 int main() {
-    std::cout << "Hello, World!" << std::endl;
+    LG lg;
+    // example1(lg);
+    // example2(lg);
+    // example3(lg);
+    // example4(lg);
+    example5(lg);
     return 0;
 }
