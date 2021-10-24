@@ -33,7 +33,7 @@ std::tuple<Set, bool> unionSets(Set a, Set b) {
             a.mySet.insert({key, val});
         }
     }
-    return {a, r};
+    return std::make_tuple(a, r);
 }
 
 Set remove(Set set, int n) {
@@ -158,34 +158,32 @@ public:
             while (!stop) {
                 auto new_goal = mkSet();
                 for (auto const&[key, val]: goal.mySet) {
-                    new_goal = unionSets(new_goal, directNeighbors(m, key)).get(0);
+                    bool temp;
+                    std::tie(new_goal, temp) = unionSets(new_goal, directNeighbors(m, key));
                 }
-                visited, stop = unionSets(visited, goal);
+                std::tie(visited, stop) = unionSets(visited, goal);
                 goal = new_goal;
             }
-            if elem(visited, x)
-            {
+            if (elem(visited, x)) {
                 return true;
             }
             return false;
         };
 
-        r = false;
+        auto r = false;
 
         lock(g);
 
         for (int x = 0; x < MAX_MUTEX; x++) {
-            r = r || checkCycle(*m, x);
+            r = r || checkCycle(*this, x);
         }
 
         unlock(g);
 
         if (r) {
-            std::cout << "\n ** cycle => potential deadlock !!! ***" << endl;
+            std::cout << "\n ** cycle => potential deadlock !!! ***" << std::endl;
         }
     }
-
-
 };
 
 
