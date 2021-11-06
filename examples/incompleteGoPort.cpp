@@ -335,7 +335,7 @@ void example5(LG m){
 
 
 
-int main() {
+/*int main() {
     LG lg;
     // example1(lg);
     // example2(lg);
@@ -343,4 +343,4 @@ int main() {
     // example4(lg);
     example5(lg);
     return 0;
-}
+}*/
