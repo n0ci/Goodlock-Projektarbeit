@@ -125,7 +125,7 @@ Es ist außerdem nicht bekannt in welchem Rahmen die Deadlock Erkennung funktion
 - FreeBSD
 - Linux aarch64, x86_64, powerpc64, powerpc64le
 - NetBSD
-- 
+
 ### Datentypen
 - ```pthread_mutex_*```
 - ```pthread_rwlock_*```
@@ -154,7 +154,7 @@ Zum Schluss übergeben wir noch zwei Flags an Tsan.
 Es ist nun möglich mit Tsan zu kompilieren.
 
 ## Ein Beispiel mit pthreads
-Das folgende Beispiel erzeugt einen potenziellen Deadlock mit pthreads.
+Das folgende Beispiel erzeugt einen für ThreadSanitizer potenziellen Deadlock mit einem pthread.
 
 ```c++
 void test_simple_pthread_example() {
