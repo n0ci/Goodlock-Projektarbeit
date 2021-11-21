@@ -10,15 +10,8 @@
   - [x] False Negative und false Positives Fälle für TSan überprüfen
 
 
-- LLVM Implementierung von ThreadSanitizer und GoodLock
-  - [ ] LLVM DeadLock detection verstehen
-  - [ ] LLVM TSan verstehen
-  - [ ] Schriftlich ausarbeiten
-
-
 - Eigenständige Implementierung in C++
   - [x] Gedanken zur Struktur machen
-  - [ ] Struktur schriftlich festhalten
   - [ ] Implementieren
   - [ ] Implementierung testen
 
@@ -66,7 +59,7 @@ Hierbei ist der schriftliche Teil in vier Teile untergliedert:
    - [False lock-order-inversion reports for locks taken in a single thread](https://github.com/google/sanitizers/issues/488)
    - [tsan: False positive for lock-order-inversion for lock cycles with asymmetrical unlocking](https://github.com/google/sanitizers/issues/814)
 - False Negatives:
-   - [Zwei Threads in Abhängigkeit](<https://sulzmann.github.io/AutonomeSysteme/lec-Deadlock.html#(3)>)
+   - [Zwei Threads in Abhängigkeit](https://sulzmann.github.io/AutonomeSysteme/lec-deadlock.html#(3))
    - [Weitere häufige false Negatives werden beschrieben](https://groups.google.com/g/thread-sanitizer/c/mB73m6Nltaw)
 
 ## Implementierungen
@@ -111,11 +104,11 @@ Der oben genannte slowdown und overhead kann je nach Anwendung kritisch sein, es
 Tsan bietet keinerlei Garantien dafür, dass data races gefunden werden und gefundene data races liefern keinen Beweis der Korrektheit ([K. Serebryany, Google](https://www.youtube.com/watch?v=5K_uIda0tZU)).
 Trotz, dass der ThreadSanitizer mittlerweile ausgereift und häufig verwendet wird, ist er nach wie vor in der Betaphase, erfährt jedoch aktive Entwicklung.
 Die Deadlock Detection wird [Stand 2020, K. Serebryany, Google](https://github.com/google/sanitizers/issues/1258) seit circa 2015 leider nicht aktiv weiterentwickelt.
-Darüber hinaus gibt es auch zwei Versionen im Repository [Deadlock_detector1](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/sanitizer_common/sanitizer_Deadlock_detector1.cpp) und [Deadlock_detector2](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/sanitizer_common/sanitizer_Deadlock_detector2.cpp).
+Darüber hinaus gibt es auch zwei Versionen im Repository [Deadlock_detector1](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/sanitizer_common/sanitizer_deadlock_detector1.cpp) und [Deadlock_detector2](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/sanitizer_common/sanitizer_Deadlock_detector2.cpp).
 Diese liefern unterschiedliche Ergebnisse, insgesamt ist die [Deadlock Erkennung als Experimental](https://github.com/google/sanitizers/wiki/ThreadSanitizerDeadlockDetector) eingestuft.
 Inwiefern diese Funktionalität im Vergleich zu der data race Erkennung des Tsan eine Anwendung in der Industrie erfährt, konnte leider nicht in Erfahrung gebracht werden.
 Es ist außerdem nicht bekannt in welchem Rahmen die Deadlock Erkennung funktional ist, das lässt sich aus mehreren Stellen des LLVM repositories ableiten.
-[Insbesondere können keine Deadlocks erkannt werden, die wirklich passieren](https://github.com/llvm/llvm-project/blob/main/compiler-rt/test/tsan/must_Deadlock.cpp). Das liegt daran, dass die Überprüfung des Graphen und damit die Erkennung des Deadlocks nach pthread_mutex_lock ausgeführt wird und sich das Programm entsprechend schon im Deadlock befindet.
+[Insbesondere können keine Deadlocks erkannt werden, die wirklich passieren](https://github.com/llvm/llvm-project/blob/main/compiler-rt/test/tsan/must_deadlock.cpp). Das liegt daran, dass die Überprüfung des Graphen und damit die Erkennung des Deadlocks nach pthread_mutex_lock ausgeführt wird und sich das Programm entsprechend schon im Deadlock befindet.
 
 ## Unterstütze Plattformen und Datentypen
 ### Plattformen
@@ -211,19 +204,13 @@ ThreadSanitizer: reported 1 warnings
 Process finished with exit code 66
 ```
 
-
-# LLVM Implementierung von ThreadSanitizer und GoodLock
-// TODO
-
-- Shadowing?
-- Vectorclocks?
-
--Interessante Files:
-  - [tsan_ilist.h](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/tsan/rtl/tsan_ilist.h)
-  - [tsan_mutexset.cpp](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/tsan/rtl/tsan_mutexset.cpp)
-  - [tsan_mutexset.h](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/tsan/rtl/tsan_mutexset.h)
-  - [sanitizer_Deadlock_detector_interface.h](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/sanitizer_common/sanitizer_Deadlock_detector_interface.h)
-  - [sanitizer_Deadlock_detector1.cpp](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/sanitizer_common/sanitizer_Deadlock_detector1.cpp)
-  - [sanitizer_Deadlock_detector2.cpp](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/sanitizer_common/sanitizer_Deadlock_detector2.cpp)
 ## Eigenständige Implementierung in C++
 // TODO
+
+-Interessante Files:
+- [tsan_ilist.h](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/tsan/rtl/tsan_ilist.h)
+- [tsan_mutexset.cpp](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/tsan/rtl/tsan_mutexset.cpp)
+- [tsan_mutexset.h](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/tsan/rtl/tsan_mutexset.h)
+- [sanitizer_Deadlock_detector_interface.h](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/sanitizer_common/sanitizer_deadlock_detector_interface.h)
+- [sanitizer_Deadlock_detector1.cpp](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/sanitizer_common/sanitizer_deadlock_detector1.cpp)
+- [sanitizer_Deadlock_detector2.cpp](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/sanitizer_common/sanitizer_deadlock_detector2.cpp)
