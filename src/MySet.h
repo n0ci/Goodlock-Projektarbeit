@@ -1,10 +1,10 @@
 #include <map>
-// in Set mehr als nur bool speichern, zb threadID, vorgänger, Uhrzeit
-class Set {
+// in MySet mehr als nur bool speichern, zb threadID, vorgänger, Uhrzeit
+class MySet {
 public:
     std::map<int, bool> mySet = std::map<int, bool>();
-    Set() = default;
-    ~Set() = default;
+    MySet() = default;
+    ~MySet() = default;
 
     bool empty() {
         return mySet.empty();
@@ -22,7 +22,7 @@ public:
         mySet[n] = false;
     }
 
-    static std::tuple<Set, bool> unionSets(Set a, Set b) {
+    static std::tuple<MySet, bool> unionSets(MySet a, MySet b) {
         auto r = true;
         for (auto const&[key, val]: b.mySet) {
             if (!a.mySet.count(key)) {

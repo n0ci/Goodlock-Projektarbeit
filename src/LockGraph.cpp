@@ -1,23 +1,30 @@
-#include <iostream>
 #include "LockGraph.h"
 
-// TODO: eigene Lockmethode?
-void LockGraph::init() {
 
+// TODO: eigene Lockmethode?
+LockGraph::LockGraph() {
+
+}
+
+void LockGraph::init(std::thread::id TID_List[MAX_TID], MyMutex **myMutexes){
+    for(int i = 0; i < MAX_TID; i++){
+        lockSet.insert({TID_List[i], MySet()});
+    }
 }
 
 void LockGraph::info() {
     std::cout << "\n *** INFO ***" << std::endl;
     g.lock();
 
-    for (int i = 0; i < MAX_TID; i++) {
-        std::cout << "\n Thread " << i << " holds the following locks:" << std::endl;
-        for (int j = 0; j < MAX_MUTEX; j++) {
-            if (lockSet[i].elem(j)) {
-                std::cout << " " << j;
+    for (auto &MapEntry : lockSet) {
+        std::cout << "\n Thread " << MapEntry.first << " holds the following locks:" << std::endl;
+        for(int i = 0; i < MAX_MUTEX; i++){
+            if (MapEntry.second.elem(i)) {
+                std::cout << " " << i;
             }
         }
     }
+
     std::cout << "\n Lock graph:";
     for (int i = 0; i < MAX_MUTEX; i++) {
         for (int j = 0; j < MAX_MUTEX; j++) {
@@ -29,25 +36,27 @@ void LockGraph::info() {
     g.unlock();
 }
 
-void LockGraph::acquire(int tid, int n) {
-    mutex[n].lock();
+void LockGraph::acquire(std::thread::id tid, int n) {
+    mutexes[n].mutex.lock();
     g.lock();
     for (int i = 0; i < MAX_MUTEX; i++) {
-        if (lockSet[tid].elem(i)) {
+        if (lockSet.at(tid).elem(i)) {
             edge[i][n] = true;
         }
     }
-}
-
-void LockGraph::release(int tid, int n) {
-    g.lock();
-    lockSet[tid].remove(n);
+    lockSet[tid].add(n);
     g.unlock();
-    mutex[n].unlock();
 }
 
-Set LockGraph::directNeighbors(int node) {
-    Set mySet;
+void LockGraph::release(std::thread::id tid, int n) {
+    g.lock();
+    lockSet.at(tid).remove(n);
+    g.unlock();
+    mutexes[n].mutex.unlock();
+}
+
+MySet LockGraph::directNeighbors(int node) {
+    MySet mySet;
     for (int y = 0; y < MAX_MUTEX; y++) {
         if (edge[node][y]) {
             mySet.add(y);
@@ -57,17 +66,17 @@ Set LockGraph::directNeighbors(int node) {
 }
 
 bool LockGraph::checkCycle(int node) {
-    Set visited;
-    Set goal = directNeighbors(node);
+    MySet visited;
+    MySet goal = directNeighbors(node);
     bool stop = false;
 
     while (!stop) {
-        Set new_goal;
+        MySet new_goal;
         for (auto const&[key, val]: goal.mySet) {
             bool temp;
-            std::tie(new_goal, temp) = Set::unionSets(new_goal, directNeighbors(key));
+            std::tie(new_goal, temp) = MySet::unionSets(new_goal, directNeighbors(key));
         }
-        std::tie(visited, stop) = Set::unionSets(visited, goal);
+        std::tie(visited, stop) = MySet::unionSets(visited, goal);
         goal = new_goal;
     }
     if (visited.elem(node)) {
@@ -88,3 +97,5 @@ bool LockGraph::check() {
     }
     return isCircle;
 }
+
+

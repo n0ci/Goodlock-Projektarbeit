@@ -1,27 +1,34 @@
+#include "MySet.h"
+#include "MyMutex.h"
+
+#include <thread>
 #include <mutex>
-#include "Set.h"
+#include <iostream>
+#include <map>
 
 class LockGraph {
-    static const int MAX_MUTEX = 2;
-    static const int MAX_TID = 3;
+    const static int MAX_MUTEX = 2;
+    const static int MAX_TID = 2;
 private:
-    Set lockSet[MAX_TID];
+    std::map<std::thread::id, MySet> lockSet = std::map<std::thread::id, MySet>();
+    MyMutex *mutexes = new MyMutex[MAX_MUTEX];
     bool edge[MAX_MUTEX][MAX_MUTEX]{false};
-    std::mutex mutex[MAX_MUTEX];
     std::mutex g;
 
 public:
-    void init();
+    LockGraph();
 
-    void acquire(int tid, int n);
+    void init(std::thread::id TID_List[MAX_TID], MyMutex **myMutexes);
 
-    void release(int tid, int n);
+    void acquire(std::thread::id tid, int n);
+
+    void release(std::thread::id tid, int n);
 
     bool check();
 
     void info();
 
-    Set directNeighbors(int node);
+    MySet directNeighbors(int node);
 
     bool checkCycle(int node);
 };
