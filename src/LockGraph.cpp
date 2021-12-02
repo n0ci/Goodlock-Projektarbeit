@@ -1,14 +1,13 @@
 #include "LockGraph.h"
 
+LockGraph::LockGraph() = default;
 
-// TODO: eigene Lockmethode?
-LockGraph::LockGraph() {
-
-}
-
-void LockGraph::init(std::thread::id TID_List[MAX_TID], MyMutex **myMutexes){
+void LockGraph::init(MyThread **myThreads, MyMutex **myMutexes){
     for(int i = 0; i < MAX_TID; i++){
-        lockSet.insert({TID_List[i], MySet()});
+        lockSet.insert({myThreads[i]->tid, MySet()});
+        for(int y = 0; y < MAX_MUTEX; y++){
+            lockSet.at(i).mySet.insert({myMutexes[y]->mid, false});
+        }
     }
 }
 
@@ -19,6 +18,7 @@ void LockGraph::info() {
     for (auto &MapEntry : lockSet) {
         std::cout << "\n Thread " << MapEntry.first << " holds the following locks:" << std::endl;
         for(int i = 0; i < MAX_MUTEX; i++){
+            std::cout << MapEntry.second.elem(i) << std::endl;
             if (MapEntry.second.elem(i)) {
                 std::cout << " " << i;
             }
@@ -36,7 +36,7 @@ void LockGraph::info() {
     g.unlock();
 }
 
-void LockGraph::acquire(std::thread::id tid, int n) {
+void LockGraph::acquire(int tid, int n) {
     mutexes[n].mutex.lock();
     g.lock();
     for (int i = 0; i < MAX_MUTEX; i++) {
@@ -44,11 +44,11 @@ void LockGraph::acquire(std::thread::id tid, int n) {
             edge[i][n] = true;
         }
     }
-    lockSet[tid].add(n);
+    lockSet.at(tid).add(n);
     g.unlock();
 }
 
-void LockGraph::release(std::thread::id tid, int n) {
+void LockGraph::release(int tid, int n) {
     g.lock();
     lockSet.at(tid).remove(n);
     g.unlock();
@@ -59,7 +59,7 @@ MySet LockGraph::directNeighbors(int node) {
     MySet mySet;
     for (int y = 0; y < MAX_MUTEX; y++) {
         if (edge[node][y]) {
-            mySet.add(y);
+            mySet.add_unsafe(y);
         }
     }
     return mySet;
@@ -93,7 +93,7 @@ bool LockGraph::check() {
     }
     g.unlock();
     if (isCircle) {
-        std::cout << "\n ** cycle => potential deadlock !!! ***" << std::endl;
+        std::cout << "\n *** cycle => potential deadlock !!! ***" << std::endl;
     }
     return isCircle;
 }

@@ -11,15 +11,19 @@ public:
     }
 
     bool elem(int n) {
-        return mySet[n];
+        return mySet.at(n);
     }
 
     void add(int n) {
+        mySet.at(n) = true;
+    }
+
+    void add_unsafe(int n) {
         mySet[n] = true;
     }
 
     void remove(int n){
-        mySet[n] = false;
+        mySet.at(n) = false;
     }
 
     static std::tuple<MySet, bool> unionSets(MySet a, MySet b) {

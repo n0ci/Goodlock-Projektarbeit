@@ -1,5 +1,6 @@
 #include "MySet.h"
 #include "MyMutex.h"
+#include "MyThread.h"
 
 #include <thread>
 #include <mutex>
@@ -10,7 +11,7 @@ class LockGraph {
     const static int MAX_MUTEX = 2;
     const static int MAX_TID = 2;
 private:
-    std::map<std::thread::id, MySet> lockSet = std::map<std::thread::id, MySet>();
+    std::map<int, MySet> lockSet = std::map<int, MySet>();
     MyMutex *mutexes = new MyMutex[MAX_MUTEX];
     bool edge[MAX_MUTEX][MAX_MUTEX]{false};
     std::mutex g;
@@ -18,11 +19,11 @@ private:
 public:
     LockGraph();
 
-    void init(std::thread::id TID_List[MAX_TID], MyMutex **myMutexes);
+    void init(MyThread **myThreads, MyMutex **myMutexes);
 
-    void acquire(std::thread::id tid, int n);
+    void acquire(int tid, int n);
 
-    void release(std::thread::id tid, int n);
+    void release(int tid, int n);
 
     bool check();
 
