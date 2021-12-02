@@ -8,8 +8,6 @@ void test_2Threads();
 
 void test_simple_pthread_example();
 
-void test_ClassicDeadlock();
-
 void test_TimeShiftDeadlock();
 
 void test_OnlyOneThread();
@@ -29,23 +27,23 @@ void test_1Encapsulated_2Threads();
 void test_1EncapsulatedThread_2Locks();
 
 
-//Hilfsmethoden
+// Hilfsmethoden
 
-void lockFunction(int caseNumber, int aqFirst, int aqSecond, int threadID);
+void lockFunction(int, int, int, int);
 
 void help_OneThread_Function(int);
 
-void help_TimeShift_Function(int caseNumber, int aqFirst, int aqSecond, int threadID);
+void help_TimeShift_Function(int, int, int, int);
 
-void help_Function_3Locks( int aqFirst, int aqSecond, int aqThird, int threadID);
+void help_Function_3Locks(int, int, int, int);
 
-void help_Encapsulated_Function(int acquire, int threadID);
+void help_Encapsulated_Function(int, int);
 
-void help_Encapsulated_2Lock_Function(int threadID, int acquire);
+void help_Encapsulated_2Lock_Function(int, int);
 
 
-static const int MAX_MUTEX = 2;
-static const int MAX_TID = 2;
+static const int MAX_MUTEX = 4;
+static const int MAX_TID = 4;
 
 MyThread *threads [MAX_TID];
 MyMutex *mutexes [MAX_MUTEX];
@@ -53,16 +51,23 @@ LockGraph LG;
 
 int main(){
     init();
+
+    // Potentieller Deadlock:
+
     //test_2Threads();
-    //test_ClassicDeadlock();
     //test_TimeShiftDeadlock();
     //test_OnlyOneThread();
-    //test_ThreeThreads();
+    //test_ThreeThreads_OneCycle();
     //test_ThreeThreads_MoreCycles();
     //test_TwoThreads_3_2Locks();
     //test_TwoThreads_3Locks();
+
+    // Sonderfälle
+    // TODO Überprüfen
     //test_1Encapsulated_1Threads();
     //test_1Encapsulated_2Threads();
+
+    // Deadlock:
     //test_1EncapsulatedThread_2Locks();
 
     LG.info();
@@ -124,11 +129,11 @@ void help_Encapsulated_Function(int acquire, int threadID) {
     printf("nach subaufruf\n");
     LG.release(threadID, acquire);
 }
-void help_Encapsulated_2Lock_Function(int threadID, int acquire){
+void help_Encapsulated_2Lock_Function(int acquire , int threadID){
     LG.acquire(threadID, acquire);
     threads[1]->thread = std::thread(lockFunction, 0, 1, 0, 1);
     threads[1]->thread.join();
-    LG.release(threadID,acquire);
+    LG.release(threadID, acquire);
 }
 void test_OnlyOneThread() {
     threads[0]->thread = std::thread(help_OneThread_Function,0);
@@ -183,7 +188,7 @@ void test_1Encapsulated_1Threads() {
 
 void test_1Encapsulated_2Threads() {        // echter Deadlock
     threads[0]->thread = std::thread(help_Encapsulated_Function, 0,0);
-    threads[2]->thread = std::thread(lockFunction,0, 1, 0, 1);
+    threads[2]->thread = std::thread(lockFunction, 0, 1, 0, 1);
     printf("starte t1\n");
     threads[0]->thread.join();
     printf("starte t2\n");

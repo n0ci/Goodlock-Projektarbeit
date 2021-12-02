@@ -325,7 +325,7 @@ void test_TwoThreads_3Locks() {
 
 /**
  * Diese Testmethode testet, ob der TSan einen verschachtelten Thread mit jeweils einem Lock erkennt und darin kein Deadlock erkennt.
- * true positive
+ * true negative
  * Aufruf mit Thread t: Lock: x und starte Thread subThread,    Unlock: x
  * Aufruf mit Thread subThread: Lock y,                         Unlock y
  */
@@ -335,14 +335,14 @@ void test_1Encapsulated_1Threads() {
 }
 
 /**
- *Diese Testmethode testet, ob der TSan einen Deadlock bei einem verschachtelten und einem normalen Thread mit verschiedener Lockreihenfolge erkennt.
+ * Diese Testmethode testet, ob der TSan einen Deadlock bei einem verschachtelten und einem normalen Thread mit verschiedener Lockreihenfolge erkennt.
  * Es wird ein Deadlock erzeugt und so kann TSan diesen nicht erkennen, da dass Programm sich aufhängt.
  * false negative
  * Aufruf mit Thread t1: Lock: x und starte Thread subThread,   Unlock: x
  * Aufruf mit Thread subThread: Lock y,                         Unlock: y
  * Aufruf mit Thread t2: Lock: y->x                             Unlock: x->y
  */
-void test_1Encapsulated_2Threads() {        // echter Deadlock
+void test_1Encapsulated_2Threads() {
     std::thread t1(help_Encapsulated_Function);
     std::thread t2(help_Function_2Locks, 1);
     printf("starte t1\n");
@@ -351,10 +351,11 @@ void test_1Encapsulated_2Threads() {        // echter Deadlock
     t2.join();
     printf("nach t2 \n");
 }
+
 /**
  * Diese Testmethode testet, ob der TSan einen Deadlock bei einem verschachtelten Threads mit verschiedener Anzahl an Lockreihenfolgen erkennt.
  * Es wird ein Deadlock erzeugt und so kann TSan diesen nicht erkennen, da dass Programm sich aufhängt.
- * false negative
+ * verursacht deadlock - keine Aussage möglich
  * Aufruf mit Thread t1: Lock: x und starte Thread subThread,   Unlock: x
  * Aufruf mit Thread subThread:  Lock: y->x                     Unlock: x->y
  */

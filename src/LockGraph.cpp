@@ -79,7 +79,7 @@ bool LockGraph::checkCycle(int node) {
         std::tie(visited, stop) = MySet::unionSets(visited, goal);
         goal = new_goal;
     }
-    if (visited.elem(node)) {
+    if (visited.elem_unsafe(node)) {
         return true;
     }
     return false;
