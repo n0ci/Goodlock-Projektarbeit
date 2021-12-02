@@ -7,13 +7,15 @@
 - Verwendung von ThreadSanitizer und GoodLock
   - [x] Verwenden von Tsan unter Windows
   - [x] Eigene Beispiele mit Tsan durchführen und beschreiben
-  - [x] False Negative und false Positives Fälle für TSan überprüfen
+  - [x] False Negative und false positives Fälle für TSan überprüfen
 
 
 - Eigenständige Implementierung in C++
   - [x] Gedanken zur Struktur machen
-  - [ ] Implementieren
+  - [x] Implementieren
   - [ ] Implementierung testen
+  - [ ] Doc schreiben
+  - [ ] Code cleanup
 
 
 - Allgemeines
@@ -29,15 +31,13 @@ Im Rahmen dieser Projektarbeit arbeiten Marie Fiederlein und Fabio Nocera gemein
 
 GoodLock ist ein Algorithmus, welcher dazu dient Programmverhalten dynamisch zu analysieren und Deadlocks zu erkennen. Das Ziel ist es sich mit dem Algorithmus, der Funktionsweise, dem Einsatz und einer eigenen Implementierung zu beschäftigen.
 
-Hierbei ist der schriftliche Teil in vier Teile untergliedert:
+Hierbei ist der schriftliche Teil in drei Teile untergliedert:
 
 1. Hintergrundmaterial und Recherchen
 
 2. Verwendung von ThreadSanitizer und GoodLock
 
-3. LLVM Implementierung von ThreadSanitizer und GoodLock
-
-4. Eigenständige Implementierung in C++
+3. Eigenständige Implementierung in C++
 
 # Hintergrundmaterial und Recherchen
 ## Wissenschaftliche Arbeiten/Paper
