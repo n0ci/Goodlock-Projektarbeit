@@ -12,20 +12,19 @@ void LockGraph::init(MyThread **myThreads, MyMutex **myMutexes){
 }
 
 void LockGraph::info() {
-    std::cout << "\n *** INFO ***" << std::endl;
+    std::cout << "\n *** INFO ***";
     g.lock();
 
     for (auto &MapEntry : lockSet) {
-        std::cout << "\n Thread " << MapEntry.first << " holds the following locks:" << std::endl;
+        std::cout << "\n Thread " << MapEntry.first << " holds the following locks:";
         for(int i = 0; i < MAX_MUTEX; i++){
-            std::cout << MapEntry.second.elem(i) << std::endl;
             if (MapEntry.second.elem(i)) {
                 std::cout << " " << i;
             }
         }
     }
 
-    std::cout << "\n Lock graph:";
+    std::cout << "\n\n Lock graph:";
     for (int i = 0; i < MAX_MUTEX; i++) {
         for (int j = 0; j < MAX_MUTEX; j++) {
             if (edge[i][j]) {
