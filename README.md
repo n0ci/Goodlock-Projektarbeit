@@ -13,8 +13,8 @@
 - Eigenständige Implementierung in C++
   - [x] Gedanken zur Struktur machen
   - [x] Implementieren
-  - [ ] Implementierung testen
-  - [ ] Doc schreiben
+  - [x] Implementierung testen
+  - [x] Doc schreiben
   - [ ] Code cleanup
 
 

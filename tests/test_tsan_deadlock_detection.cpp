@@ -173,8 +173,8 @@ void help_Function_1Lock(int number) {
 
 /**
  * Dies ist eine Hilfsmethode, welche auf einen Thread hintereinander zwei verschiedene Lockreihenfolge ausführt.
- * Aufruf mit 0: Lock: x->y,    Unlock: y->x
- * Aufruf mit 1: Lock: y->x,    Unlock: x->y
+ * Aufruf mit 0: Lock: x->y     Unlock: y->x
+ * Aufruf mit 1: Lock: y->x     Unlock: x->y
  */
 void help_OneThread_Function() {
     help_Function_2Locks(0);
@@ -183,7 +183,7 @@ void help_OneThread_Function() {
 
 /**
  * Dies ist eine Hilfsmethode, welche den aufrufenden Thread erst schlafen legt und anschließend eine Lockreihenfolge ausführt.
- * Aufruf mit 1: Lock: y->x,    Unlock: x->y
+ * Aufruf mit 1: Lock: y->x     Unlock: x->y
  */
 void help_TimeShift_Function() {
     std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -218,8 +218,8 @@ void help_Encapsulated_2Lock_Function(){
  * Diese Testmethode testet einen klassischen Deadlock.
  * Er erkennt einen potenziellen Deadlock.
  * true positive
- * Aufruf mit Thread t0: Lock: x->y,    Unlock: y->x
- * Aufruf mit Thread t1: Lock: y->x,    Unlock: x->y
+ * Aufruf mit Thread t0: Lock: x->y     Unlock: y->x
+ * Aufruf mit Thread t1: Lock: y->x     Unlock: x->y
  */
 void test_ClassicDeadlock() {
     std::thread t0(help_Function_2Locks, 0);
@@ -232,9 +232,9 @@ void test_ClassicDeadlock() {
  * Diese Testmethode testet, ob der TSan zwei zeitversetzte Lockreihenfolgen auf zwei Threads trotzdem als potenziellen Deadlock wahrnimmt.
  * Obwohl das nie zu einem Deadlock führen kann, da t1 erst anfängt, wenn t0 schon lange fertig ist.
  * false positive
- * Aufruf mit Thread t0: Lock: x->y,    Unlock: y->x
+ * Aufruf mit Thread t0: Lock: x->y     Unlock: y->x
  * t1 schläft
- * Aufruf mit Thread t1: Lock: y->x,    Unlock: x->y
+ * Aufruf mit Thread t1: Lock: y->x     Unlock: x->y
  *
  */
 void test_TimeShiftDeadlock() {
@@ -248,8 +248,8 @@ void test_TimeShiftDeadlock() {
  * Diese Testmethode testet, ob der TSan zwei Lockreihenfolgen auf einem Thread als potenziellen Deadlock erkennt.
  * Dieser eine Thread kann keinen Deadlock produzieren.
  * false positive
- * Aufruf mit Thread t: Lock: x->y,     Unlock: y->x
- * Aufruf mit Thread t: Lock: y->x,     Unlock: x->y
+ * Aufruf mit Thread t: Lock: x->y      Unlock: y->x
+ * Aufruf mit Thread t: Lock: y->x      Unlock: x->y
  */
 void test_OnlyOneThread() {
     std::thread t(help_OneThread_Function);
@@ -260,9 +260,9 @@ void test_OnlyOneThread() {
  * Diese Testmethode testet, ob der TSan mit mehr als nur zwei Threads einen Zyklus erkennt.
  * Er erkennt einen potenziellen Deadlock bei t0 und t1
  * true positive
- * Aufruf mit Thread t0: Lock: x->y,    Unlock: y->x
- * Aufruf mit Thread t1: Lock: y->x,    Unlock: x->y
- * Aufruf mit Thread t2: Lock z->x,     Unlock: x->z
+ * Aufruf mit Thread t0: Lock: x->y     Unlock: y->x
+ * Aufruf mit Thread t1: Lock: y->x     Unlock: x->y
+ * Aufruf mit Thread t2: Lock z->x      Unlock: z->x
  */
 void test_ThreeThreads_OneCycle() {
     std::thread t0(help_Function_2Locks, 0);
@@ -276,10 +276,10 @@ void test_ThreeThreads_OneCycle() {
  * Diese Testmethode testet, ob der TSan mit mehr als nur zwei Threads mehrere Zyklen erkennt.
  * Er erkennt zwei potenzielle Deadlock bei t0 und t1 und bei t2 und t3.
  * true positive
- * Aufruf mit Thread t0: Lock: x->y,    Unlock: y->x
- * Aufruf mit Thread t1: Lock: y->x,    Unlock: x->y
- * Aufruf mit Thread t2: Lock: z->x,    Unlock: x->z
- * Aufruf mit Thread t3: Lock: x->z,    Unlock: z->x
+ * Aufruf mit Thread t0: Lock: x->y     Unlock: y->x
+ * Aufruf mit Thread t1: Lock: y->x     Unlock: x->y
+ * Aufruf mit Thread t2: Lock: z->x     Unlock: x->z
+ * Aufruf mit Thread t3: Lock: x->z     Unlock: z->x
  */
 void test_ThreeThreads_MoreCycles() {
     std::thread t0(help_Function_2Locks, 0);
@@ -296,7 +296,7 @@ void test_ThreeThreads_MoreCycles() {
  * Diese Testmethode testet, ob der TSan mit zwei Treads und unterschiedlichen Anzahl von locks den Deadlock erkennt.
  * Er erkennt diesen potenziellen Deadlock.
  * true positive
- * Aufruf mit Thread t0: Lock: x->y, y->z,  Unlock: z->y, y->x
+ * Aufruf mit Thread t0: Lock: x->y, y->z   Unlock: z->y, y->x
  * Aufruf mit Thread t1: Lock: y->x         Unlock: x->y
 
  */
@@ -326,8 +326,8 @@ void test_TwoThreads_3Locks() {
 /**
  * Diese Testmethode testet, ob der TSan einen verschachtelten Thread mit jeweils einem Lock erkennt und darin kein Deadlock erkennt.
  * true negative
- * Aufruf mit Thread t: Lock: x und starte Thread subThread,    Unlock: x
- * Aufruf mit Thread subThread: Lock y,                         Unlock y
+ * Aufruf mit Thread t: Lock: x und starte Thread subThread    Unlock: x
+ * Aufruf mit Thread subThread: Lock: y                         Unlock: y
  */
 void test_1Encapsulated_1Threads() {
     std::thread t(help_Encapsulated_Function);
@@ -336,10 +336,10 @@ void test_1Encapsulated_1Threads() {
 
 /**
  * Diese Testmethode testet, ob der TSan einen Deadlock bei einem verschachtelten und einem normalen Thread mit verschiedener Lockreihenfolge erkennt.
- * Es wird ein Deadlock erzeugt und so kann TSan diesen nicht erkennen, da dass Programm sich aufhängt.
+ * Erkennt die Verschachtelung nicht.
  * false negative
- * Aufruf mit Thread t1: Lock: x und starte Thread subThread,   Unlock: x
- * Aufruf mit Thread subThread: Lock y,                         Unlock: y
+ * Aufruf mit Thread t1: Lock: x und starte Thread subThread    Unlock: x
+ * Aufruf mit Thread subThread: Lock y                          Unlock: y
  * Aufruf mit Thread t2: Lock: y->x                             Unlock: x->y
  */
 void test_1Encapsulated_2Threads() {

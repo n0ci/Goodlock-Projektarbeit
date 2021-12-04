@@ -7,6 +7,9 @@
 #include <iostream>
 #include <map>
 
+/**
+ * Die Klasse LockGraph enthält alles Notwendige, um die Funktionalitäten des GoodLock Algorithmus zur Verfügung zu stellen.
+ */
 class LockGraph {
     // TODO move it to main only?
     const static int MAX_MUTEX = 4;
@@ -22,9 +25,9 @@ public:
 
     void init(MyThread **myThreads, MyMutex **myMutexes);
 
-    void acquire(int tid, int n);
+    void acquire(int tid, int mid);
 
-    void release(int tid, int n);
+    void release(int tid, int mid);
 
     bool check();
 
