@@ -14,6 +14,10 @@ public:
         return mySet.at(n);
     }
 
+    bool elem_unsafe(int n) {
+        return mySet[n];
+    }
+
     void add(int n) {
         mySet.at(n) = true;
     }

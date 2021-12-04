@@ -8,8 +8,9 @@
 #include <map>
 
 class LockGraph {
-    const static int MAX_MUTEX = 2;
-    const static int MAX_TID = 2;
+    // TODO move it to main only?
+    const static int MAX_MUTEX = 4;
+    const static int MAX_TID = 4;
 private:
     std::map<int, MySet> lockSet = std::map<int, MySet>();
     MyMutex *mutexes = new MyMutex[MAX_MUTEX];
