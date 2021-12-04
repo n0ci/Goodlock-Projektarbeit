@@ -54,21 +54,21 @@ int main(){
 
     // Potentieller Deadlock:
 
-    //test_2Threads();
-    //test_TimeShiftDeadlock();
-    //test_OnlyOneThread();
-    //test_ThreeThreads_OneCycle();
-    //test_ThreeThreads_MoreCycles();
-    //test_TwoThreads_3_2Locks();
-    //test_TwoThreads_3Locks();
+    test_2Threads();                  //-> true positive      //tsan: true positive
+    //test_TimeShiftDeadlock();         //-> false positive     //tsan: false positive
+    //test_OnlyOneThread();             //-> false positive     //tsan: false positive
+    //test_ThreeThreads_OneCycle();     //-> true positive      //tsan: true positive
+    //test_ThreeThreads_MoreCycles();   //-> true positive      //tsan: true positive
+    //test_TwoThreads_3_2Locks();       //-> true positive      //tsan: true positive
+    //test_TwoThreads_3Locks();         //-> false positive     //tsan: false positive
 
     // Sonderfälle
     // TODO Überprüfen
-    //test_1Encapsulated_1Threads();
-    //test_1Encapsulated_2Threads();
+    //test_1Encapsulated_1Threads();    //-> false negative, erkennt keine Verkapselung von threads, malt keinen Graphen     //tsan: true negative
+    //test_1Encapsulated_2Threads();    //-> false negative, erkennt keine Verkapselung von threads, malt nur Teilgraphen   //tsan: false negative
 
     // Deadlock:
-    //test_1EncapsulatedThread_2Locks();
+   //test_1EncapsulatedThread_2Locks(); //endet im Deadlock     //tsan: Deadlock
 
     LG.info();
     LG.check();
@@ -135,6 +135,7 @@ void help_Encapsulated_2Lock_Function(int acquire , int threadID){
     threads[1]->thread.join();
     LG.release(threadID, acquire);
 }
+
 void test_OnlyOneThread() {
     threads[0]->thread = std::thread(help_OneThread_Function,0);
     threads[0]->thread.join();
@@ -186,7 +187,7 @@ void test_1Encapsulated_1Threads() {
     threads[0]->thread.join();
 }
 
-void test_1Encapsulated_2Threads() {        // echter Deadlock
+void test_1Encapsulated_2Threads() {        // potentieller Deadlock
     threads[0]->thread = std::thread(help_Encapsulated_Function, 0,0);
     threads[2]->thread = std::thread(lockFunction, 0, 1, 0, 1);
     printf("starte t1\n");
