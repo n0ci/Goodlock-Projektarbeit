@@ -1,17 +1,64 @@
-#include "goodlock_main.h"
+#include "../src/LockGraph.h"
+
+// Tests
+void test_simpleLock_OneThread();
+
+void test_2Threads();
+
+void test_simple_pthread_example();
+
+void test_TimeShiftDeadlock();
+
+void test_OnlyOneThread();
+
+void test_ThreeThreads_OneCycle();
+
+void test_ThreeThreads_MoreCycles();
+
+void test_TwoThreads_3_2Locks();
+
+void test_TwoThreads_3Locks();
+
+void test_1Encapsulated_1Threads();
+
+void test_1Encapsulated_2Threads();
+
+void test_1EncapsulatedThread_2Locks();
+
+// Hilfsmethoden
+void lockFunction(int, int, int, int);
+
+void help_OneThread_Function(int);
+
+void help_TimeShift_Function(int, int, int, int);
+
+void help_Function_3Locks(int, int, int, int);
+
+void help_Encapsulated_Function(int, int);
+
+void help_Encapsulated_2Lock_Function(int, int);
+
+void init();
+
+static const int MAX_MUTEX = 4;
+static const int MAX_TID = 4;
+
+MyThread *threads[MAX_TID];
+MyMutex *mutexes[MAX_MUTEX];
+LockGraph LG;
 
 /**
  * Die Main Methode ist der Eintrittspunkt des Programms.
  * @return default Wert 0.
  */
-int main(){
+int main() {
     init();
 
     // Kein DeadLock:
     //test_simpleLock_OneThread();
 
     // Potentieller Deadlock:
-    //test_2Threads();                      //-> true positive      //tsan: true positive
+    test_2Threads();                      //-> true positive      //tsan: true positive
     //test_TimeShiftDeadlock();             //-> false positive     //tsan: false positive
     //test_OnlyOneThread();                 //-> false positive     //tsan: false positive
     //test_ThreeThreads_OneCycle();         //-> true positive      //tsan: true positive
@@ -34,11 +81,11 @@ int main(){
 /**
  * Initialisiert Threads und Locks mit TID und MID. Führt anschließend die Initialisierung des LG aus.
  */
-void init(){
-    for(int i = 0; i < MAX_TID; i++){
+void init() {
+    for (int i = 0; i < MAX_TID; i++) {
         threads[i] = new MyThread(i);
     }
-    for(int i = 0; i < MAX_MUTEX; i++){
+    for (int i = 0; i < MAX_MUTEX; i++) {
         mutexes[i] = new MyMutex(i);
     }
     LG.init(threads, mutexes);
@@ -75,7 +122,7 @@ void lockFunction(int caseNumber, int aqFirst, int aqSecond, int threadID) {
  * @param aqThird, welches Mutex als drittes gelockt werden soll.
  * @param threadID, welcher Thread der ausführende Thread ist.
  */
-void help_Function_3Locks(int aqFirst, int aqSecond, int aqThird, int threadID){
+void help_Function_3Locks(int aqFirst, int aqSecond, int aqThird, int threadID) {
     LG.acquire(threadID, aqFirst);
     LG.acquire(threadID, aqSecond);
     LG.acquire(threadID, aqThird);
@@ -129,7 +176,7 @@ void help_Encapsulated_Function(int acquire, int threadID) {
  * @param acquire welches Mutex vom Hauptthread gelockt werden soll.
  * @param threadID welcher Thread der ausführende Thread ist.
  */
-void help_Encapsulated_2Lock_Function(int acquire, int threadID){
+void help_Encapsulated_2Lock_Function(int acquire, int threadID) {
     LG.acquire(threadID, acquire);
     threads[1]->thread = std::thread(lockFunction, 0, 1, 0, 1);
     threads[1]->thread.join();
@@ -142,7 +189,7 @@ void help_Encapsulated_2Lock_Function(int acquire, int threadID){
  * true negative.
  * Aufruf mit Thread 0:     Lock: 0         Unlock: 0.
  */
-void test_simpleLock_OneThread(){
+void test_simpleLock_OneThread() {
     threads[0]->thread = std::thread(lockFunction, 1, 0, -1, 0);
     threads[0]->thread.join();
 }
@@ -174,6 +221,7 @@ void test_TimeShiftDeadlock() {
     threads[0]->thread.join();
     threads[1]->thread.join();
 }
+
 /**
  * Diese Testmethode testet einen klassischen Deadlock mit zwei Threads und zwei Mutexen.
  * Es wird ein potenziellen Deadlock erkannt.
@@ -181,7 +229,7 @@ void test_TimeShiftDeadlock() {
  * Aufruf mit Thread 0:    Lock: 0->1    Unlock: 1->0.
  * Aufruf mit Thread 1:    Lock: 1->0    Unlock: 0->1.
  */
-void test_2Threads(){
+void test_2Threads() {
     threads[0]->thread = std::thread(lockFunction, 0, 0, 1, 0);
     threads[1]->thread = std::thread(lockFunction, 0, 1, 0, 1);
     threads[0]->thread.join();
@@ -288,7 +336,7 @@ void test_1Encapsulated_2Threads() {
  * Aufruf mit Thread 1:         Lock: 0 und starte Thread subThread     Unlock: 0.
  * Aufruf mit Thread subThread: Lock: 1->0                              Unlock: 0->1.
  */
-void test_1EncapsulatedThread_2Locks(){
+void test_1EncapsulatedThread_2Locks() {
     threads[0]->thread = std::thread(help_Encapsulated_2Lock_Function, 0, 0);
     threads[0]->thread.join();
 }

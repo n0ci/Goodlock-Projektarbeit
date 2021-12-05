@@ -7,6 +7,7 @@
 class MySet {
 public:
     std::map<int, bool> mySet = std::map<int, bool>();
+
     /**
      * Default constructor.
      */
@@ -66,7 +67,7 @@ public:
      * Ändert die Value für einen Key (MID) in mySet auf false.
      * @param mid Die ID des Mutex.
      */
-    void remove(int mid){
+    void remove(int mid) {
         mySet.at(mid) = false;
     }
 

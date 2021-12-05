@@ -3,7 +3,7 @@
 /**
  * Die Klasse MyMutex stellt zu einem Mutex eine Mutex ID (mid) zur Verfügung.
  */
-class MyMutex{
+class MyMutex {
 public:
     int mid = -1;
     std::mutex mutex;
@@ -11,13 +11,13 @@ public:
     /**
      * Erstellt ein Objekt MyMutex.
      */
-    MyMutex()= default;
+    MyMutex() = default;
 
     /**
      * Übergibt einem Objekt MyMutex eine mid.
      * @param mid Mutex Id.
      */
-    explicit MyMutex(int mid){
+    explicit MyMutex(int mid) {
         this->mid = mid;
     }
 };

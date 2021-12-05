@@ -3,7 +3,7 @@
 /**
  * Die Klasse MyThread stellt zu einem Thread eine Thread ID (mid) zur Verfügung.
  */
-class MyThread{
+class MyThread {
 public:
     int tid = -1;
     std::thread thread;
@@ -11,13 +11,13 @@ public:
     /**
      * Erstellt ein Objekt MyThread.
      */
-    MyThread()= default;
+    MyThread() = default;
 
     /**
      * Übergibt einem Objekt MyThread eine tid.
      * @param mid Thread Id.
      */
-    explicit MyThread(int tid){
+    explicit MyThread(int tid) {
         this->tid = tid;
     }
 };

@@ -14,10 +14,10 @@ LockGraph::LockGraph() = default;
  * @param myThreads Array vom Typ MyThread, enthält Threads mit TID.
  * @param myMutexes Array vom Typ MyMutex, enthält Mutexe mit MID.
  */
-void LockGraph::init(MyThread **myThreads, MyMutex **myMutexes){
-    for(int i = 0; i < MAX_TID; i++){
+void LockGraph::init(MyThread **myThreads, MyMutex **myMutexes) {
+    for (int i = 0; i < MAX_TID; i++) {
         lockSet.insert({myThreads[i]->tid, MySet()});
-        for(int y = 0; y < MAX_MUTEX; y++){
+        for (int y = 0; y < MAX_MUTEX; y++) {
             lockSet.at(i).mySet.insert({myMutexes[y]->mid, false});
         }
     }
@@ -31,9 +31,9 @@ void LockGraph::info() {
     std::cout << "\n *** INFO ***";
     g.lock();
 
-    for (auto &MapEntry : lockSet) {
+    for (auto &MapEntry: lockSet) {
         std::cout << "\n Thread " << MapEntry.first << " holds the following locks:";
-        for(int i = 0; i < MAX_MUTEX; i++){
+        for (int i = 0; i < MAX_MUTEX; i++) {
             if (MapEntry.second.elem(i)) {
                 std::cout << " " << i;
             }
@@ -114,7 +114,7 @@ bool LockGraph::checkCycle(int node) {
     MySet goal = directNeighbors(node);
     bool stop = false;
 
-    while(!stop) {
+    while (!stop) {
         MySet new_goal;
         for (auto const&[key, val]: goal.mySet) {
             bool temp;
