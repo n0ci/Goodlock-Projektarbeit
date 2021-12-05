@@ -205,7 +205,67 @@ Process finished with exit code 66
 ```
 
 ## Eigenständige Implementierung in C++
-// TODO
+### Struktur
+#### LockGraph
+Die Klasse enthält alle Methoden, um die Mutexe vom Typ MyMutex zu acquiren und zu releasen und somit den Lockgraphen zu aktualisieren.
+
+Bei der Methode acquire wird das Mutex gelockt, das zum Thread entsprechende MySet im lockSet aktualisiert.
+Falls dieses Mutex über ein anderes Mutex acquired wird, dann wird in edge die Kante gesetzt.
+Bei der Methode release wird das Mutex unlocked, das zum Thread entsprechende MySet im lockSet aktualisiert.
+Mithilfe der check Methode, kann der Graph auf Zyklen überprüft werden und mit der Methode info, wird der Graph ausgegeben.
+
+Der LockGraph besteht aus einem lockSet, einem Array mutexes, einem zwei dimensionalen Array edge und einem Mutex g.
+##### lockSet
+Das lockSet ist eine Map mit der Thread ID als Schlüsselvariable und als dazugehöriger Wert ein Set vom Typ MySet.
+Es enthält alle Threads und deren MySets genau einmal.
+Dieses lockSet enthält die Informationen, welcher Thread welches Mutex in dem Moment acquired hat. 
+##### mutexes
+Das Array mutexes hat die Länge Max_Mutex und ist vom Typ MyMutex.
+In diesem Array werden die initialisierten Mutexe gespeichert.
+##### edge
+In diesem zwei dimensionalen Array der Größe Max_Mutex * Max_Mutex werden die Kanten zwischen den Mutexen gespeichert.
+Es wird mit false initialisiert.
+Jedes Mal, wenn ein Mutex m2 über ein anderes Mutex m1 acquired wird, wird in diesem Array in der Zeile m1 in der Spalte m2 die Kante auf wahr gesetzt. 
+##### Mutex g
+Es handelt sich hier um ein standard Mutex und dient uns, wenn wir über den Graphen iterieren und etwas auslesen, dass kein anderer Thread Zugriff auf den Graphen hat.
+So wird ausgeschlossen, dass beim Auslesen falsche Werte gelesen werden.
+#### MySet
+Die Klasse MySet enthält eine Map der Länge Max_Mutex und Funktionen, um diese Map zu aktualisieren.
+Es enthält eine Map mit der Mutex ID als Schlüsselvariablen und als Wert ein Boolean.
+Diese Map wird zuerst mit allen Einträgen auf false initialisiert.
+
+Falls der dazugehörige Thread ein Mutex vom Typ MyMutex acquired, so wird der entsprechende Eintrag in dieser Map auf true gesetzt.
+Wird dieses Mutex dann wieder released, so wird der entsprechende Eintrag wieder auf false gesetzt.
+Mit der Methode unionSet werden zwei Sets vereinigt und diese Methode wird beim Überprüfen von Zyklen benutzt.
+#### MyMutex
+Diese Klasse MyMutex stellt uns zu einem Standard Mutex eine Mutex ID zur Verfügung.
+#### MyThread
+Diese Klasse MyThread stellt uns zu einem Standard Thread eine Thread ID zur Verfügung.
+### Implementierung
+Die grundlegende Implementierung besteht aus einem LockGraph, der jedes Mutex, mithilfe vom lockSet und dem Array edge, abspeichert.
+
+Mit den Methoden acquire und release werden Mutexe von MyMutex gelockt, wieder unlocked und der LockGraph aktualisiert.
+Das Array edge enthält alle Kanten/ Verbindungen zwischen den Mutexen. Beim Initialisieren sind alle Einträge 0, da es noch keine Kanten gibt.
+Bei jedem Locken von einem Mutex über ein anderes Mutex, wird die Kante im Array edge gesetzt.
+
+Zum Beispiel: Mutex 0 lockt Mutex 1, Kante in der Zeile 0 und in der Spalte 1 wird auf 1 gesetzt.
+
+Es wird nicht beachtet, welcher Thread welche Kante setzt.
+
+Beim Überprüfen, ob ein Zyklus existiert, wird mithilfe von der Funktion Check über jedes Mutex m iteriert und es werden mithilfe der CheckCycle Methode seine direkten und indirekten Nachbarn angeschaut.
+Dabei wird über das Array edges in der Zeile m iteriert und die entsprechenden Mutexe bei den der Eintrag 1 war in einem neuen Set gespeichert.
+Für jedes eingetragene Mutex mi im neuen Set wird auch wieder über das Array edges in Zeile mi iteriert und die direkten Nachbarn werden, sofern sie nicht schon besucht worden sind, ins neue Set eingetragen.
+
+Falls wir über die Nachbarn wieder auf das eingesetzte Mutex m kommen, haben wir einen Zyklus und geben eine Meldung aus.
+Am Ende wird mit der Funktion info noch angezeigt, welche Mutexe eine gemeinsame Kante besitzen.
+
+###Zusammenfassung der gewonnenen Erkenntnisse
+- besser Threads verstanden, wie sie funktionieren
+- Parallelität (hyperthread) muss man viel beachten
+- 
+
+
+
 
 -Interessante Files:
 - [tsan_ilist.h](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/tsan/rtl/tsan_ilist.h)
