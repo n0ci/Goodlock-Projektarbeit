@@ -6,6 +6,8 @@
 #include <mutex>
 #include <iostream>
 #include <map>
+#include <vector>
+#include <iomanip>
 
 /**
  * Die Klasse LockGraph enthält alles Notwendige, um die Funktionalitäten des GoodLock Algorithmus zur Verfügung zu stellen.
@@ -19,6 +21,9 @@ private:
     MyMutex *mutexes = new MyMutex[MAX_MUTEX];
     bool edge[MAX_MUTEX][MAX_MUTEX]{false};
     std::mutex g;
+    std::vector<std::tuple<int, int, int>> history;
+    int opCount = 0;
+
 
 public:
     LockGraph();
@@ -36,4 +41,6 @@ public:
     MySet directNeighbors(int node);
 
     bool checkCycle(int node);
+
+    void printHistory();
 };

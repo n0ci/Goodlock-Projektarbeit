@@ -58,6 +58,8 @@ void LockGraph::info() {
  * @param mid Die ID des Mutex.
  */
 void LockGraph::acquire(int tid, int mid) {
+    opCount++;
+    history.emplace_back(tid, 1, mid);
     mutexes[mid].mutex.lock();
     g.lock();
     for (int i = 0; i < MAX_MUTEX; i++) {
@@ -75,6 +77,8 @@ void LockGraph::acquire(int tid, int mid) {
  * @param mid Die ID des Mutex.
  */
 void LockGraph::release(int tid, int mid) {
+    opCount++;
+    history.emplace_back(tid, 0, mid);
     g.lock();
     lockSet.at(tid).remove(mid);
     g.unlock();
@@ -145,6 +149,55 @@ bool LockGraph::check() {
         std::cout << "\n *** cycle => potential deadlock !!! ***" << std::endl;
     }
     return isCircle;
+}
+
+void LockGraph::printHistory() {
+    std::cout << "\n *** HISTORY ***" << std::endl;
+
+    std::cout
+            << std::left
+            << std::setw(10)
+            << "Call"
+            << std::left
+            << std::setw(15)
+            << "Operation";
+
+    for (int y = 0; y < MAX_TID; y++) {
+        std::cout
+                << std::left
+                << std::setw(15)
+                << "T" + std::to_string(y) + " holds";
+    }
+
+    std::cout << std::endl;
+
+    std::vector<int> threadHolds[MAX_TID];
+    for (int i = 1; i <= opCount; i++) {
+        int thread = std::get<0>(history.at(i - 1));
+        int opCode = std::get<1>(history.at(i - 1));
+        int mutex = std::get<2>(history.at(i - 1));
+
+        opCode ? threadHolds[thread].push_back(mutex) : threadHolds[thread].pop_back();
+
+        std::cout
+                << std::left
+                << std::setw(10)
+                << i
+                << std::left
+                << std::setw(15)
+                << "T" + std::to_string(thread) + (opCode ? " acq" : " rel") + " M" + std::to_string(mutex);
+        for (auto vector: threadHolds) {
+            std::string mutexString = "";
+            for (auto element: vector) {
+                mutexString.append(std::to_string(element) + " ");
+            }
+            std::cout
+                    << std::left
+                    << std::setw(15)
+                    << mutexString;
+        }
+        std::cout << std::endl;
+    }
 }
 
 

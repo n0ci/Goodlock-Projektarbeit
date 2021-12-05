@@ -58,11 +58,11 @@ int main() {
     //test_simpleLock_OneThread();
 
     // Potentieller Deadlock:
-    test_2Threads();                      //-> true positive      //tsan: true positive
+    //test_2Threads();                      //-> true positive      //tsan: true positive
     //test_TimeShiftDeadlock();             //-> false positive     //tsan: false positive
     //test_OnlyOneThread();                 //-> false positive     //tsan: false positive
     //test_ThreeThreads_OneCycle();         //-> true positive      //tsan: true positive
-    //test_ThreeThreads_MoreCycles();       //-> true positive      //tsan: true positive
+    test_ThreeThreads_MoreCycles();       //-> true positive      //tsan: true positive
     //test_TwoThreads_3_2Locks();           //-> true positive      //tsan: true positive
     //test_TwoThreads_3Locks();             //-> false positive     //tsan: false positive
 
@@ -75,6 +75,7 @@ int main() {
 
     LG.info();
     LG.check();
+    LG.printHistory();
     return 0;
 }
 
