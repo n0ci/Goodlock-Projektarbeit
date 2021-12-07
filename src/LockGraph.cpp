@@ -1,8 +1,5 @@
 #include "LockGraph.h"
 
-/**
- * Todo: init entfernen und Constructor nehmen?
- */
 LockGraph::LockGraph() = default;
 
 /**
@@ -15,7 +12,7 @@ LockGraph::LockGraph() = default;
  * @param myMutexes Array vom Typ MyMutex, enthält Mutexe mit MID.
  */
 void LockGraph::init(MyThread **myThreads, MyMutex **myMutexes) {
-    for (int i = 0; i < MAX_TID; i++) {
+    for (int i = 0; i < MAX_THREAD; i++) {
         lockSet.insert({myThreads[i]->tid, MySet()});
         for (int y = 0; y < MAX_MUTEX; y++) {
             lockSet.at(i).mySet.insert({myMutexes[y]->mid, false});
@@ -58,10 +55,10 @@ void LockGraph::info() {
  * @param mid Die ID des Mutex.
  */
 void LockGraph::acquire(int tid, int mid) {
+    g.lock();
     opCount++;
     history.emplace_back(tid, 1, mid);
     mutexes[mid].mutex.lock();
-    g.lock();
     for (int i = 0; i < MAX_MUTEX; i++) {
         if (lockSet.at(tid).elem(i)) {
             edge[i][mid] = true;
@@ -77,9 +74,9 @@ void LockGraph::acquire(int tid, int mid) {
  * @param mid Die ID des Mutex.
  */
 void LockGraph::release(int tid, int mid) {
+    g.lock();
     opCount++;
     history.emplace_back(tid, 0, mid);
-    g.lock();
     lockSet.at(tid).remove(mid);
     g.unlock();
     mutexes[mid].mutex.unlock();
@@ -121,8 +118,7 @@ bool LockGraph::checkCycle(int node) {
     while (!stop) {
         MySet new_goal;
         for (auto const&[key, val]: goal.mySet) {
-            bool temp;
-            std::tie(new_goal, temp) = MySet::unionSets(new_goal, directNeighbors(key));
+            new_goal = std::get<0>(MySet::unionSets(new_goal, directNeighbors(key)));
         }
         std::tie(visited, stop) = MySet::unionSets(visited, goal);
         goal = new_goal;
@@ -152,6 +148,7 @@ bool LockGraph::check() {
 }
 
 void LockGraph::printHistory() {
+    g.lock();
     std::cout << "\n *** HISTORY ***" << std::endl;
 
     std::cout
@@ -162,7 +159,7 @@ void LockGraph::printHistory() {
             << std::setw(15)
             << "Operation";
 
-    for (int y = 0; y < MAX_TID; y++) {
+    for (int y = 0; y < MAX_THREAD; y++) {
         std::cout
                 << std::left
                 << std::setw(15)
@@ -171,7 +168,7 @@ void LockGraph::printHistory() {
 
     std::cout << std::endl;
 
-    std::vector<int> threadHolds[MAX_TID];
+    std::vector<int> threadHolds[MAX_THREAD];
     for (int i = 1; i <= opCount; i++) {
         int thread = std::get<0>(history.at(i - 1));
         int opCode = std::get<1>(history.at(i - 1));
@@ -198,6 +195,7 @@ void LockGraph::printHistory() {
         }
         std::cout << std::endl;
     }
+    g.unlock();
 }
 
 

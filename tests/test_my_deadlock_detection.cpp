@@ -45,7 +45,7 @@ static const int MAX_TID = 4;
 
 MyThread *threads[MAX_TID];
 MyMutex *mutexes[MAX_MUTEX];
-LockGraph LG;
+LockGraph LG = LockGraph();
 
 /**
  * Die Main Methode ist der Eintrittspunkt des Programms.
