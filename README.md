@@ -205,9 +205,26 @@ Process finished with exit code 66
 ```
 
 ## Eigenständige Implementierung in C++
+### Implementierung
+Die grundlegende Implementierung ist in C++ und besteht aus einem LockGraph, der jedes Mutex, mithilfe vom lockSet und dem Array edge, abspeichert.
+
+Mit den Methoden acquire und release werden Mutexe von MyMutex gelockt, wieder unlocked und der LockGraph aktualisiert.
+Das Array edge enthält alle Kanten/ Verbindungen zwischen den Mutexen. Beim Initialisieren sind alle Einträge 0, da es noch keine Kanten gibt.
+Bei jedem Locken von einem Mutex über ein anderes Mutex, wird die Kante im Array edge gesetzt.
+
+Zum Beispiel: Mutex 0 lockt Mutex 1, Kante in der Zeile 0 und in der Spalte 1 wird auf 1 gesetzt.
+
+Es wird nicht beachtet, welcher Thread welche Kante setzt.
+
+Beim Überprüfen, ob ein Zyklus existiert, wird mithilfe von der Funktion Check über jedes Mutex m iteriert und es werden mithilfe der CheckCycle Methode seine direkten und indirekten Nachbarn angeschaut.
+Dabei wird über das Array edges in der Zeile m iteriert und die entsprechenden Mutexe bei den der Eintrag 1 war in einem neuen Set gespeichert.
+Für jedes eingetragene Mutex mi im neuen Set wird auch wieder über das Array edges in Zeile mi iteriert und die direkten Nachbarn werden, sofern sie nicht schon besucht worden sind, ins neue Set eingetragen.
+
+Falls wir über die Nachbarn wieder auf das eingesetzte Mutex m kommen, haben wir einen Zyklus und geben eine Meldung aus.
+Am Ende wird mit der Funktion info noch angezeigt, welche Mutexe eine gemeinsame Kante besitzen.
 ### Struktur
 #### LockGraph
-Die Klasse enthält alle Methoden, um die Mutexe vom Typ MyMutex zu acquiren und zu releasen und somit den Lockgraphen zu aktualisieren.
+Die Klasse [LockGraph](src/LockGraph.h) enthält alle Methoden, um die Mutexe vom Typ MyMutex zu acquiren und zu releasen und somit den Lockgraphen zu aktualisieren.
 
 Bei der Methode acquire wird das Mutex gelockt, das zum Thread entsprechende MySet im lockSet aktualisiert.
 Falls dieses Mutex über ein anderes Mutex acquired wird, dann wird in edge die Kante gesetzt.
@@ -230,7 +247,7 @@ Jedes Mal, wenn ein Mutex m2 über ein anderes Mutex m1 acquired wird, wird in d
 Es handelt sich hier um ein standard Mutex und dient uns, wenn wir über den Graphen iterieren und etwas auslesen, dass kein anderer Thread Zugriff auf den Graphen hat.
 So wird ausgeschlossen, dass beim Auslesen falsche Werte gelesen werden.
 #### MySet
-Die Klasse MySet enthält eine Map der Länge Max_Mutex und Funktionen, um diese Map zu aktualisieren.
+Die Klasse [MySet](src/MySet.h) enthält eine Map der Länge Max_Mutex und Funktionen, um diese Map zu aktualisieren.
 Es enthält eine Map mit der Mutex ID als Schlüsselvariablen und als Wert ein Boolean.
 Diese Map wird zuerst mit allen Einträgen auf false initialisiert.
 
@@ -238,31 +255,136 @@ Falls der dazugehörige Thread ein Mutex vom Typ MyMutex acquired, so wird der e
 Wird dieses Mutex dann wieder released, so wird der entsprechende Eintrag wieder auf false gesetzt.
 Mit der Methode unionSet werden zwei Sets vereinigt und diese Methode wird beim Überprüfen von Zyklen benutzt.
 #### MyMutex
-Diese Klasse MyMutex stellt uns zu einem Standard Mutex eine Mutex ID zur Verfügung.
+Diese Klasse [MyMutex](src/MyMutex.h) stellt uns zu einem Standard Mutex eine Mutex ID zur Verfügung.
 #### MyThread
-Diese Klasse MyThread stellt uns zu einem Standard Thread eine Thread ID zur Verfügung.
-### Implementierung
-Die grundlegende Implementierung besteht aus einem LockGraph, der jedes Mutex, mithilfe vom lockSet und dem Array edge, abspeichert.
+Diese Klasse [MyThread](src/MyThread.h) stellt uns zu einem Standard Thread eine Thread ID zur Verfügung.
 
-Mit den Methoden acquire und release werden Mutexe von MyMutex gelockt, wieder unlocked und der LockGraph aktualisiert.
-Das Array edge enthält alle Kanten/ Verbindungen zwischen den Mutexen. Beim Initialisieren sind alle Einträge 0, da es noch keine Kanten gibt.
-Bei jedem Locken von einem Mutex über ein anderes Mutex, wird die Kante im Array edge gesetzt.
+### Fälle, die bei dieser Implementierung nicht abgedeckt sind
+Die Fälle sind unter anderem in der [Testklasse](tests/test_my_deadlock_detection.cpp) implementiert und ergeben die gleichen falschen Fälle wie beim TSan.\
+#### Notation
+  | Ausdruck | Bedeutung
+  |:---------|:-------|
+  | Lock: 0 -> 1| Zuerst wird das Mutex 0 und anschließend Mutex 1 vom aufrufenden Thread gelocked
+  | Unlock: 1 -> 0 | Zuerst wird das Mutex 1 und anschließend das Mutex 0 vom aufrufenden Thread entlocked
+  | Lock: 0 -> 1 -> 2 | Zuerst wird das Mutex 0, dann das Mutex 1 und dann das Mutex 2 vom aufrufenden Thread gelocked
+#### false positive
+- Die Implementierung beachtet nicht, welcher Thread, welches Mutex aufruft.\
+  So wird bei einem Aufruf mit einem Thread bei 2 Aufrufen in umgekehrter Lockreihenfolge mit zwei Mutexen auch eine Warnmeldung ausgegeben.\
+  Obwohl dieser Zyklus mit einem Thread zu keinem Problem führt.
 
-Zum Beispiel: Mutex 0 lockt Mutex 1, Kante in der Zeile 0 und in der Spalte 1 wird auf 1 gesetzt.
+  | Aufruf | Lock | Unlock |
+  |:-------------------:|:------------:|:----------------:|
+  Erster Aufruf | 0 -> 1 | 1 -> 0
+  Zweiter Aufruf | 1 -> 0 | 0 -> 1
 
-Es wird nicht beachtet, welcher Thread welche Kante setzt.
+- Die Implementierung beachtet die Zeitabstände nicht.\
+  So wird bei Aufrufen mit zwei Threads, die mit einer Sekunde Verzögerung zwei Mutexe in umgekehrter Lockreihenfolge locken wollen, eine Warnmeldung ausgegeben.\
+  Obwohl dieser Zyklus durch die Zeitverzögerung nicht möglich ist.
+  
+  | Aufruf | Lock | Unlock |
+  |:-------------------:|:------------:|:----------------:|
+  Aufruf mit Thread 0: | 0 -> 1 | 1 -> 0
+  Thread 1 schläft| | |
+  Aufruf mit Thread 1: | 1 -> 0 | 0 -> 1
 
-Beim Überprüfen, ob ein Zyklus existiert, wird mithilfe von der Funktion Check über jedes Mutex m iteriert und es werden mithilfe der CheckCycle Methode seine direkten und indirekten Nachbarn angeschaut.
-Dabei wird über das Array edges in der Zeile m iteriert und die entsprechenden Mutexe bei den der Eintrag 1 war in einem neuen Set gespeichert.
-Für jedes eingetragene Mutex mi im neuen Set wird auch wieder über das Array edges in Zeile mi iteriert und die direkten Nachbarn werden, sofern sie nicht schon besucht worden sind, ins neue Set eingetragen.
+- Die Implementierung beachtet nicht, ob ein Zyklus tatsächlich zustande kommen kann.\
+  So wird bei zwei Aufrufen mit zwei Threads, die beide zuerst Mutex 0 locken und danach zwei andere Mutexe in umgekehrter Lockreihenfolge locken, eine Warnmeldung ausgegeben.\
+  Obwohl dieser Zyklus nicht möglich ist, da Thread 2 auf Thread 1 warten wird, bis dieser Mutex 0 wieder freigibt, bevor er andere Mutexe lockt.
+  
+  | Aufruf | Lock | Unlock |
+  |:-------------------:|:------------:|:----------------:|
+  Aufruf mit Thread 0: | 0 -> 1 -> 2 | 2 -> 1 -> 0
+  Aufruf mit Thread 1: | 0 -> 2 -> 1 | 1 -> 2 -> 0
 
-Falls wir über die Nachbarn wieder auf das eingesetzte Mutex m kommen, haben wir einen Zyklus und geben eine Meldung aus.
-Am Ende wird mit der Funktion info noch angezeigt, welche Mutexe eine gemeinsame Kante besitzen.
 
-###Zusammenfassung der gewonnenen Erkenntnisse
+#### false negative
+- Die Implementierung erkennt keine verschachtelten Threads und deren Abhängigkeit zueinander.\
+  So wird bei einem Aufruf mit Thread t0 und seinem Subthread, die die Mutexe in umgekehrter Lockreihenfolge wie ein anderer Thread t1 locken, keine Warnmeldung ausgegeben.\
+  Obwohl hier ein Zyklus und dadurch ein Deadlock entstehen kann.
+
+  | Aufruf | Lock | Unlock |
+  |:-------------------:|:------------:|:----------------:|
+  Aufruf mit Thread 1: | 0 und starte Thread subThread | 0
+  Aufruf mit Thread subThread: | 1 | 1
+  Aufruf mit Thread 2: | 1 -> 0 | 0 -> 1
+
+#### Deadlock
+- Die Implementierung erkennt keinen Deadlock, wenn das Programm tatsächlich, während der Ausführung, in ein Deadlock endet.\
+  So bleibt bei einem Aufruf mit Thread t0, das Mutex 0 lockt und dann ein Subthread startet, welches Mutex 1 und 0 locken möchte, in einem Deadlock stecken.
+
+  | Aufruf | Lock | Unlock |
+  |:-------------------:|:------------:|:----------------:|
+  Aufrufender Thread: | 0 | 0
+  Aufruf mit subThread: | 0 -> 1 | 1 -> 0
+  
+
+### Anwendung der Implementierung
+Anhand des Testbeispiels test_FourThreads_MoreCycles() wird die Anwendung erklärt.\
+Im Beispiel werden insgesamt 4 Threads mit unterschiedlicher Lockreihenfolge mit 3 Mutexen aufgerufen.\
+Am Ende der Ausführung werden immer INFO, Lock graph und HISTORY ausgegeben.
+Diese drei Ausgaben geben Informationen über die Ausführung der Threads, deren gelockten Mutexe, sowie ob es mindestens einen Zyklus gibt.\
+
+- In der INFO steht, welche Threads noch welche Mutexe gelockt haben.\
+  Da im Beispiel alle Threads ihre Mutexe am Ende releasen, hält kein Thread nach der Ausführung noch ein Mutex.
+```
+  *** INFO ***
+  Thread 0 holds the following locks:
+  Thread 1 holds the following locks:
+  Thread 2 holds the following locks:
+  Thread 3 holds the following locks:
+```
+- Der Lock graph gibt Auskunft, welche Mutexe verschachtelt gelockt werden.\
+  Wenn es eine Kante von Mutex x zu Mutex y und eine Kante in die andere Richtung gibt, dann gibt es ein Zyklus und eine Fehlermeldung wird ausgegeben.\
+  In diesem Beispiel gibt es zwei Zyklen und die Fehlermeldung wird ausgegeben.\
+  Der erste Zyklus ist zwischen Mutex 0 und Mutex 1.\
+  Der zweite Zyklus ist zwischen Mutex 0 und Mutex 2.
+```
+  Lock graph:
+  0 --> 1
+  0 --> 2
+  1 --> 0
+  2 --> 0
+  *** cycle => potential deadlock !!! ***
+```
+- Mit der HISTORY kann nachvollzogen werden, welche Operation, welcher Thread mit welchem Mutex, in einer bestimmten Reihenfolge, gemacht hat.\
+  Beispielhaft werden nun die ersten 4 Zeilen erklärt. Das gilt jedoch für jede weitere Zeile auch.
+
+  Beim Aufruf 1 acquired der Thread T0 das Mutex M0\
+  Beim Aufruf 2 acquired der Thread T0 das Mutex M1\
+  Beim Aufruf 3 released der Thread T0 das Mutex M1\
+  Beim Aufruf 4 released der Thread T0 das Mutex M0
+```
+ *** HISTORY ***
+Call      Operation      T0 holds       T1 holds       T2 holds       T3 holds
+1         T0 acq M0      0
+2         T0 acq M1      0 1
+3         T0 rel M1      0
+4         T0 rel M0
+5         T1 acq M1                     1
+6         T1 acq M0                     1 0
+7         T1 rel M0                     1
+8         T1 rel M1
+9         T2 acq M2                                    2
+10        T2 acq M0                                    2 0
+11        T2 rel M0                                    2
+12        T2 rel M2
+13        T3 acq M0                                                   0
+14        T3 acq M2                                                   0 2
+15        T3 rel M2                                                   0
+16        T3 rel M0
+
+Process finished with exit code 0
+ ```
+In dieser Ausgabe sind die Zyklen markiert. Das ist jedoch kein Teil der Implementierung, sondern dient nur zur Veranschaulichung.\
+
+![](Zyklenaufgemalt.png)
+
+
+### Zusammenfassung der gewonnenen Erkenntnisse
 - besser Threads verstanden, wie sie funktionieren
 - Parallelität (hyperthread) muss man viel beachten
-- 
+
+
 
 
 
