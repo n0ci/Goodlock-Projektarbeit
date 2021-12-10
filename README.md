@@ -205,62 +205,29 @@ Process finished with exit code 66
 ```
 
 ## Eigenständige Implementierung in C++
-### Implementierung
-Die grundlegende Implementierung ist in C++ und besteht aus einem LockGraph, der jedes Mutex, mithilfe vom lockSet und dem Array edge, abspeichert.
+### Algorithmus
+Die Idee des Goodlock Algorithmus ist es, mithilfe eines Graphen durch Zyklen, Deadlocks zu erkennen.
+Genauer gesagt, gibt es einen Graphen mit einer Adjazenzmatrix, der sich alle Kanten zwischen den Mutexen merkt.
+Jedes Mal, wenn ein Thread ein Mutex acquired oder released, wird der Graph aktualisieren.
+Falls über einen Thread ein Mutex gelockt werden soll, nachdem schon ein anderes Mutex gelockt wurde, wird an die Adjazenzmatrix aktualisiert.
 
-Mit den Methoden acquire und release werden Mutexe von MyMutex gelockt, wieder unlocked und der LockGraph aktualisiert.
-Das Array edge enthält alle Kanten/ Verbindungen zwischen den Mutexen. Beim Initialisieren sind alle Einträge 0, da es noch keine Kanten gibt.
-Bei jedem Locken von einem Mutex über ein anderes Mutex, wird die Kante im Array edge gesetzt.
+Zum Beispiel: ein Thread möchte Mutex 1, nachdem er Mutex 0 gelockt hat, locken -> Kante in der Zeile 0 und in Spalte 1 wird auf 1 gesetzt.
 
-Zum Beispiel: Mutex 0 lockt Mutex 1, Kante in der Zeile 0 und in der Spalte 1 wird auf 1 gesetzt.
+Das Überprüfen erfolgt durch das Iterieren über die Adjazenzmatrix.
+Dabei wird für jeden Eintrag mithilfe seiner Nachbarn geprüft, ob er einen Zyklus bildet.
+Falls wir einen Zyklus gefunden haben, gibt es einen potenziellen Deadlock und wir geben eine Warnung aus.
+Dieser potenzielle Deadlock kann, je nachdem in welcher Reihenfolge die Threads durchgeführt werden, zu einem tatsächlichen Deadlock kommen.
 
-Es wird nicht beachtet, welcher Thread welche Kante setzt.
+Zum Beispiel:
+  Thread 0 und Thread 1 werden nahezu gleichzeitig ausgeführt.
+  Thread 0 möchte zuerst Mutex 0 und dann Mutex 1 locken.
+  Thread 1 möchte zuerst Mutex 1 und dann Mutex 0 locken.
+  => Potenzieller Deadlock
 
-Beim Überprüfen, ob ein Zyklus existiert, wird mithilfe von der Funktion Check über jedes Mutex m iteriert und es werden mithilfe der CheckCycle Methode seine direkten und indirekten Nachbarn angeschaut.
-Dabei wird über das Array edges in der Zeile m iteriert und die entsprechenden Mutexe bei den der Eintrag 1 war in einem neuen Set gespeichert.
-Für jedes eingetragene Mutex mi im neuen Set wird auch wieder über das Array edges in Zeile mi iteriert und die direkten Nachbarn werden, sofern sie nicht schon besucht worden sind, ins neue Set eingetragen.
-
-Falls wir über die Nachbarn wieder auf das eingesetzte Mutex m kommen, haben wir einen Zyklus und geben eine Meldung aus.
-Am Ende wird mit der Funktion info noch angezeigt, welche Mutexe eine gemeinsame Kante besitzen.
-### Struktur
-#### LockGraph
-Die Klasse [LockGraph](src/LockGraph.h) enthält alle Methoden, um die Mutexe vom Typ MyMutex zu acquiren und zu releasen und somit den Lockgraphen zu aktualisieren.
-
-Bei der Methode acquire wird das Mutex gelockt, das zum Thread entsprechende MySet im lockSet aktualisiert.
-Falls dieses Mutex über ein anderes Mutex acquired wird, dann wird in edge die Kante gesetzt.
-Bei der Methode release wird das Mutex unlocked, das zum Thread entsprechende MySet im lockSet aktualisiert.
-Mithilfe der check Methode, kann der Graph auf Zyklen überprüft werden und mit der Methode info, wird der Graph ausgegeben.
-
-Der LockGraph besteht aus einem lockSet, einem Array mutexes, einem zwei dimensionalen Array edge und einem Mutex g.
-##### lockSet
-Das lockSet ist eine Map mit der Thread ID als Schlüsselvariable und als dazugehöriger Wert ein Set vom Typ MySet.
-Es enthält alle Threads und deren MySets genau einmal.
-Dieses lockSet enthält die Informationen, welcher Thread welches Mutex in dem Moment acquired hat. 
-##### mutexes
-Das Array mutexes hat die Länge Max_Mutex und ist vom Typ MyMutex.
-In diesem Array werden die initialisierten Mutexe gespeichert.
-##### edge
-In diesem zwei dimensionalen Array der Größe Max_Mutex * Max_Mutex werden die Kanten zwischen den Mutexen gespeichert.
-Es wird mit false initialisiert.
-Jedes Mal, wenn ein Mutex m2 über ein anderes Mutex m1 acquired wird, wird in diesem Array in der Zeile m1 in der Spalte m2 die Kante auf wahr gesetzt. 
-##### Mutex g
-Es handelt sich hier um ein standard Mutex und dient uns, wenn wir über den Graphen iterieren und etwas auslesen, dass kein anderer Thread Zugriff auf den Graphen hat.
-So wird ausgeschlossen, dass beim Auslesen falsche Werte gelesen werden.
-#### MySet
-Die Klasse [MySet](src/MySet.h) enthält eine Map der Länge Max_Mutex und Funktionen, um diese Map zu aktualisieren.
-Es enthält eine Map mit der Mutex ID als Schlüsselvariablen und als Wert ein Boolean.
-Diese Map wird zuerst mit allen Einträgen auf false initialisiert.
-
-Falls der dazugehörige Thread ein Mutex vom Typ MyMutex acquired, so wird der entsprechende Eintrag in dieser Map auf true gesetzt.
-Wird dieses Mutex dann wieder released, so wird der entsprechende Eintrag wieder auf false gesetzt.
-Mit der Methode unionSet werden zwei Sets vereinigt und diese Methode wird beim Überprüfen von Zyklen benutzt.
-#### MyMutex
-Diese Klasse [MyMutex](src/MyMutex.h) stellt uns zu einem Standard Mutex eine Mutex ID zur Verfügung.
-#### MyThread
-Diese Klasse [MyThread](src/MyThread.h) stellt uns zu einem Standard Thread eine Thread ID zur Verfügung.
+In dem Falle, dass es tatsächlich zu einem Deadlock kommt, kann dieser Deadlock über den Algorithmus nicht mehr erkannt werden, weil die Threads aufeinander warten.
 
 ### Fälle, die bei dieser Implementierung nicht abgedeckt sind
-Die Fälle sind unter anderem in der [Testklasse](tests/test_my_deadlock_detection.cpp) implementiert und ergeben die gleichen falschen Fälle wie beim TSan.\
+Die Fälle sind unter anderem in der [Testklasse](tests/test_my_deadlock_detection.cpp) implementiert und ergeben die gleichen falschen Ausgaben wie beim TSan.\
 #### Notation
   | Ausdruck | Bedeutung
   |:---------|:-------|
@@ -274,8 +241,8 @@ Die Fälle sind unter anderem in der [Testklasse](tests/test_my_deadlock_detecti
 
   | Aufruf | Lock | Unlock |
   |:-------------------:|:------------:|:----------------:|
-  Erster Aufruf | 0 -> 1 | 1 -> 0
-  Zweiter Aufruf | 1 -> 0 | 0 -> 1
+  | Erster Aufruf | 0 -> 1 | 1 -> 0
+  | Zweiter Aufruf | 1 -> 0 | 0 -> 1
 
 - Die Implementierung beachtet die Zeitabstände nicht.\
   So wird bei Aufrufen mit zwei Threads, die mit einer Sekunde Verzögerung zwei Mutexe in umgekehrter Lockreihenfolge locken wollen, eine Warnmeldung ausgegeben.\
@@ -283,9 +250,9 @@ Die Fälle sind unter anderem in der [Testklasse](tests/test_my_deadlock_detecti
   
   | Aufruf | Lock | Unlock |
   |:-------------------:|:------------:|:----------------:|
-  Aufruf mit Thread 0: | 0 -> 1 | 1 -> 0
-  Thread 1 schläft| | |
-  Aufruf mit Thread 1: | 1 -> 0 | 0 -> 1
+  | Aufruf mit Thread 0: | 0 -> 1 | 1 -> 0
+  | Thread 1 schläft| | |
+  | Aufruf mit Thread 1: | 1 -> 0 | 0 -> 1
 
 - Die Implementierung beachtet nicht, ob ein Zyklus tatsächlich zustande kommen kann.\
   So wird bei zwei Aufrufen mit zwei Threads, die beide zuerst Mutex 0 locken und danach zwei andere Mutexe in umgekehrter Lockreihenfolge locken, eine Warnmeldung ausgegeben.\
@@ -293,8 +260,8 @@ Die Fälle sind unter anderem in der [Testklasse](tests/test_my_deadlock_detecti
   
   | Aufruf | Lock | Unlock |
   |:-------------------:|:------------:|:----------------:|
-  Aufruf mit Thread 0: | 0 -> 1 -> 2 | 2 -> 1 -> 0
-  Aufruf mit Thread 1: | 0 -> 2 -> 1 | 1 -> 2 -> 0
+  | Aufruf mit Thread 0: | 0 -> 1 -> 2 | 2 -> 1 -> 0
+  | Aufruf mit Thread 1: | 0 -> 2 -> 1 | 1 -> 2 -> 0
 
 
 #### false negative
@@ -304,9 +271,9 @@ Die Fälle sind unter anderem in der [Testklasse](tests/test_my_deadlock_detecti
 
   | Aufruf | Lock | Unlock |
   |:-------------------:|:------------:|:----------------:|
-  Aufruf mit Thread 1: | 0 und starte Thread subThread | 0
-  Aufruf mit Thread subThread: | 1 | 1
-  Aufruf mit Thread 2: | 1 -> 0 | 0 -> 1
+  | Aufruf mit Thread 1: | 0 und starte Thread subThread | 0
+  | Aufruf mit Thread subThread: | 1 | 1
+  | Aufruf mit Thread 2: | 1 -> 0 | 0 -> 1
 
 #### Deadlock
 - Die Implementierung erkennt keinen Deadlock, wenn das Programm tatsächlich, während der Ausführung, in ein Deadlock endet.\
@@ -314,8 +281,8 @@ Die Fälle sind unter anderem in der [Testklasse](tests/test_my_deadlock_detecti
 
   | Aufruf | Lock | Unlock |
   |:-------------------:|:------------:|:----------------:|
-  Aufrufender Thread: | 0 | 0
-  Aufruf mit subThread: | 0 -> 1 | 1 -> 0
+  | Aufrufender Thread: | 0 | 0
+  | Aufruf mit subThread: | 0 -> 1 | 1 -> 0
   
 
 ### Anwendung der Implementierung
@@ -381,8 +348,21 @@ In dieser Ausgabe sind die Zyklen markiert. Das ist jedoch kein Teil der Impleme
 
 
 ### Zusammenfassung der gewonnenen Erkenntnisse
-- besser Threads verstanden, wie sie funktionieren
-- Parallelität (hyperthread) muss man viel beachten
+Diese grundlegende Implementierung kann durch Erweiterungen optimiert werden.
+
+Bei dieser Implementierung acquiren Threads die Mutexe, jedoch wird diese Information nicht weiter verarbeitet.\
+So könnten, durch das Beachten der Thread ID, die obrigen Fälle, die durch das nicht Beachten falsche Ausgaben ergaben, korrekte Ausgaben ausgegeben werden.
+Ein Beispiel dafür ist, dass eine Warnmeldung ausgegeben wird, auch wenn nur ein Thread jeweils zwei Mutexe in umgekehrter Reihenfolge lockt.
+
+Ein weiterer Punkt ist, dass die Abhängigkeit von verschachtelten Threads und deren gelockten Mutexen nicht erkannt wird.\
+Das könnte man lösen, indem man die Thread ID vom äußeren Thread dem inneren Thread mitgibt.
+So kann diese Zusatzinformation und somit die Abhängigkeiten beim Überprüfen auf Zyklen mitberücksichtigt werden.
+
+Zum Schluss gibt es noch das Problem, dass das Programm in einen tatsächlichen Deadlock geraten kann und so auch die Detektion von Deadlocks im Deadlock landet.
+Dann wird gar keine Ausgabe ausgegeben, denn der Algorithmus überprüft erst am Ende auf mögliche Zyklen und somit auf Deadlocks.\
+Da wir nicht zum Ende kommen, wird nichts ausgegeben.
+Für dieses Problem haben wir keine Lösung gefunden.
+
 
 
 
