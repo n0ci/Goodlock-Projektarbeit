@@ -13,7 +13,7 @@ void test_OnlyOneThread();
 
 void test_ThreeThreads_OneCycle();
 
-void test_ThreeThreads_MoreCycles();
+void test_FourThreads_MoreCycles();
 
 void test_TwoThreads_3_2Locks();
 
@@ -62,7 +62,7 @@ int main() {
     //test_TimeShiftDeadlock();             //-> false positive     //tsan: false positive
     //test_OnlyOneThread();                 //-> false positive     //tsan: false positive
     //test_ThreeThreads_OneCycle();         //-> true positive      //tsan: true positive
-    test_ThreeThreads_MoreCycles();       //-> true positive      //tsan: true positive
+    test_FourThreads_MoreCycles();       //-> true positive      //tsan: true positive
     //test_TwoThreads_3_2Locks();           //-> true positive      //tsan: true positive
     //test_TwoThreads_3Locks();             //-> false positive     //tsan: false positive
 
@@ -134,8 +134,8 @@ void help_Function_3Locks(int aqFirst, int aqSecond, int aqThird, int threadID) 
 
 /**
  * Dies ist eine Hilfsmethode, welche auf einen Thread hintereinander zwei verschiedene Lockreihenfolge mit zwei Mutexen ausführt.
- * Erster Aufruf: Lock: 0->1,    Unlock: 1->0.
- * Zweiter Aufruf: Lock: 1->0,   Unlock: 0->1.
+ * Erster Aufruf:           Lock: 0->1      Unlock: 1->0.
+ * Zweiter Aufruf:          Lock: 1->0      Unlock: 0->1.
  * @param threadID, welcher Thread der ausführende Thread ist.
  */
 void help_OneThread_Function(int threadID) {
@@ -145,7 +145,7 @@ void help_OneThread_Function(int threadID) {
 
 /**
  * Dies ist eine Hilfsmethode, welche den aufrufenden Thread erst schlafen legt und anschließend eine Lockreihenfolge mit zwei Mutexen ausführt.
- * Aufruf: Lock: 1->0,    Unlock: 0->1.
+ * Aufruf:                  Lock: 1->0      Unlock: 0->1.
  * @param caseNumber, ob nur ein oder zwei Mutexe gelockt werden sollen.
  * @param aqFirst, welches Mutex als erstes gelockt werden soll.
  * @param aqSecond, welches Mutex als zweites gelockt werden soll.
@@ -263,7 +263,7 @@ void test_ThreeThreads_OneCycle() {
  * Aufruf mit Thread 2:     Lock: 2->0    Unlock: 0->2.
  * Aufruf mit Thread 3:     Lock: 0->2    Unlock: 2->0.
  */
-void test_ThreeThreads_MoreCycles() {
+void test_FourThreads_MoreCycles() {
     threads[0]->thread = std::thread(lockFunction, 0, 0, 1, 0);
     threads[1]->thread = std::thread(lockFunction, 0, 1, 0, 1);
     threads[2]->thread = std::thread(lockFunction, 0, 2, 0, 2);
@@ -278,8 +278,8 @@ void test_ThreeThreads_MoreCycles() {
  * Diese Testmethode testet, ob ein potenzieller Deadlock mit zwei Treads und unterschiedlichen Anzahl an Mutexen erkannt wird.
  * Es wird ein potenziellen Deadlock erkannt.
  * true positive.
- * Aufruf mit Thread 0:     Lock: 0->1, 1->2  Unlock: 2->1, 1->2.
- * Aufruf mit Thread 1:     Lock: 1->0        Unlock: 0->1.
+ * Aufruf mit Thread 0:     Lock: 0->1->2   Unlock: 2->1->2.
+ * Aufruf mit Thread 1:     Lock: 1->0      Unlock: 0->1.
  */
 void test_TwoThreads_3_2Locks() {
     threads[0]->thread = std::thread(help_Function_3Locks, 0, 1, 2, 0);
@@ -294,8 +294,8 @@ void test_TwoThreads_3_2Locks() {
  * Jedoch kann das nie zu einem Deadlock führen, da bevor diese Mutexe gelocked werden können, muss das Mutex 0 gelocked sein.
  * Und dieses kann immer nur von einem Thread gelocked sein und der andere Thread muss warten.
  * false positive
- * Aufruf mit Thread 0:     Lock: 0->1, 1->2    Unlock: 2->1, 1->0.
- * Aufruf mit Thread 1:     Lock: 0->2, 2->1    Unlock: 1->2, 2->0.
+ * Aufruf mit Thread 0:     Lock: 0->1->2   Unlock: 2->1->0.
+ * Aufruf mit Thread 1:     Lock: 0->2->1   Unlock: 1->2->0.
  */
 void test_TwoThreads_3Locks() {
     threads[0]->thread = std::thread(help_Function_3Locks, 0, 1, 2, 0);
