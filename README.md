@@ -1,32 +1,32 @@
-# TODO's
-- Hintergrundmaterial und Recherchen
-  - [x] Readme mit Grundstruktur anlegen
-  - [x] Materialbeschaffung abschließen
-
-
-- Verwendung von ThreadSanitizer und GoodLock
-  - [x] Verwenden von Tsan unter Windows
-  - [x] Eigene Beispiele mit Tsan durchführen und beschreiben
-  - [x] False Negative und false positives Fälle für TSan überprüfen
-
-
-- Eigenständige Implementierung in C++
-  - [x] Gedanken zur Struktur machen
-  - [x] Implementieren
-  - [x] Implementierung testen
-  - [x] Doc schreiben
-  - [ ] Code cleanup
-
-
-- Allgemeines
-  - [ ] Zusammenfassung der gewonnenen Erkenntnisse
-  - [ ] Denglisch ausmerzen
-  - [ ] Bleiwüste aufräumen
-  - [ ] Tippfehler & Grammatikfehler eliminieren
-  - [ ] Überschriften überprüfen
+# Inhaltsverzeichnis
+- [Inhaltsverzeichnis](#inhaltsverzeichnis)
+- [GoodLock-Projektarbeit](#goodlock-projektarbeit)
+  * [Einführung Projektarbeit](#a-nameeinfuehrung-paaeinfhrung-projektarbeit)
+- [Hintergrundmaterial und Recherchen](#hintergrundmaterial-und-recherchen)
+  * [Wissenschaftliche Arbeiten und Paper](#wissenschaftliche-arbeiten-und-paper)
+  * [Beispiele](#beispiele)
+  * [Implementierungen](#implementierungen)
+  * [Diskussionen und Erklärungen](#a-namediskussionen-und-erklrungenadiskussionen-und-erklrungen)
+- [Verwendung von ThreadSanitizer und dessen GoodLock Implementierung](#verwendung-von-threadsanitizer-und-dessen-goodlock-implementierung)
+  * [Einführung TSan](#a-nameeinfuehrung-tsanaeinfhrung-tsan)
+  * [Problematiken](#problematiken)
+  * [Unterstütze Plattformen und Datentypen](#a-nameunterstuetzte-plattformauntersttze-plattformen-und-datentypen)
+    + [Plattformen](#plattformen)
+    + [Datentypen](#datentypen)
+  * [Einrichtung unter Windows](#einrichtung-unter-windows)
+  * [Ein Beispiel mit pthreads](#ein-beispiel-mit-pthreads)
+  * [Eigenständige Implementierung in C++](#a-nameeigenstaendige-implementierungaeigenstndige-implementierung-in-c)
+    + [Algorithmus](#algorithmus)
+    + [Fälle, die bei dieser Implementierung nicht abgedeckt sind](#a-namefaelleaflle-die-bei-dieser-implementierung-nicht-abgedeckt-sind)
+      - [Notation](#notation)
+      - [false positive](#false-positive)
+      - [false negative](#false-negative)
+      - [Deadlock](#deadlock)
+    + [Anwendung der Implementierung](#anwendung-der-implementierung)
+    + [Zusammenfassung der gewonnenen Erkenntnisse](#zusammenfassung-der-gewonnenen-erkenntnisse)
 
 # GoodLock-Projektarbeit
-## Einführung
+## <a name="einfuehrung-pa"></a>Einführung Projektarbeit
 Im Rahmen dieser Projektarbeit arbeiten Marie Fiederlein und Fabio Nocera gemeinsam am Thema GoodLock. Betreut wird das Thema von Herrn Prof. Dr. Martin Sulzmann.
 
 GoodLock ist ein Algorithmus, welcher dazu dient Programmverhalten dynamisch zu analysieren und Deadlocks zu erkennen. Das Ziel ist es sich mit dem Algorithmus, der Funktionsweise, dem Einsatz und einer eigenen Implementierung zu beschäftigen.
@@ -40,7 +40,7 @@ Hierbei ist der schriftliche Teil in drei Teile untergliedert:
 3. Eigenständige Implementierung in C++
 
 # Hintergrundmaterial und Recherchen
-## Wissenschaftliche Arbeiten/Paper
+## Wissenschaftliche Arbeiten und Paper
 - Der Algorithmus für die Detektion von Deadlocks und data Races mit maximal 2 Threads wird erklärt und in Java implementiert.
    - [Using Runtime Analysis to Guide Model Checking of Java Programs](<https://ti.arc.nasa.gov/m/pub-archive/177h/0177%20(Havelund).pdf>)
 - Der Algorithmus für die Detektion von Deadlocks mit n Threads wird erklärt und in Java implementiert.
@@ -53,12 +53,12 @@ Hierbei ist der schriftliche Teil in drei Teile untergliedert:
 ## Beispiele
 - Eine Beschreibung einiger der häufigsten Daten Races, die vom ThreadSanitizer erkannt werden.
    - [ThreadSanitizerPopularDataRaces](https://github.com/google/sanitizers/wiki/ThreadSanitizerPopularDataRaces)
-- False Positives:
+- False Positive Fälle bei der Deadlock Erkennung:
    - [ThreadSanitizer gives false positive warning about Deadlock](https://gist.github.com/spetrunia/77274cf2d5848e0a7e090d622695ed4e)
    - [Thread Sanitizer false positive on lock-order-inversion (potential Deadlock)](https://github.com/google/sanitizers/issues/1419)
    - [False lock-order-inversion reports for locks taken in a single thread](https://github.com/google/sanitizers/issues/488)
    - [tsan: False positive for lock-order-inversion for lock cycles with asymmetrical unlocking](https://github.com/google/sanitizers/issues/814)
-- False Negatives:
+- False Negative Fälle bei der Deadlock Erkennung:
    - [Zwei Threads in Abhängigkeit](https://sulzmann.github.io/AutonomeSysteme/lec-deadlock.html#(3))
    - [Weitere häufige false Negatives werden beschrieben](https://groups.google.com/g/thread-sanitizer/c/mB73m6Nltaw)
 
@@ -72,7 +72,7 @@ Hierbei ist der schriftliche Teil in drei Teile untergliedert:
 - Tests aus dem Repository von LLVM.
    - [llvm-project/compiler-rt/test/tsan](https://github.com/llvm/llvm-project/tree/main/compiler-rt/test/tsan)
 
-## Diskussionen und Erklärungen
+## <a name="Diskussionen-und-Erklärungen"></a>Diskussionen und Erklärungen
 - Es wird über den Speicherplatzbedarf für das Speichern von geteilten Variablen und/oder Zugriffen des gemeinsamen Lesens von TSan diskutiert und wie das Löschen beim Überlauf gelöst ist.
    - [Speicherverwaltung von Tsan für seine gespeicherten Variablen](https://groups.google.com/g/thread-sanitizer/c/mB73m6Nltaw)
 - TSan entdeckt nur potenzielle Deadlocks. Falls tatsächlich ein Deadlock während des Tests auftritt, dann wird sich TSan aufhängen.
@@ -90,10 +90,10 @@ Hierbei ist der schriftliche Teil in drei Teile untergliedert:
    - [2015 LLVM Developers’ Meeting: K. Serebryany & P. Collingbourne "Beyond Sanitizers..."](https://www.youtube.com/watch?v=5K_uIda0tZU)
 
 # Verwendung von ThreadSanitizer und dessen GoodLock Implementierung
-## Einführung
+## <a name="einfuehrung-tsan"></a>Einführung TSan
 Der ThreadSanitizer ist Teil des [LLVM Projects](https://llvm.org/), einer Sammlung von modularen und wiederverwendbaren compiler und toolchain Technologien sowie Teil von [gcc](https://gcc.gnu.org/) und [clang](https://clang.llvm.org/).
 Insbesondere ist der ThreadSanitizer Teil der Codebase von [compiler-rt](https://compiler-rt.llvm.org/) zusammen mit anderen Sanitizern, wie zum Beispiel der [AdressSanitizer](https://clang.llvm.org/docs/AddressSanitizer.html).
-ThreadSanitizer übernimmt hier die Funktion eines Tools, welches [data races](https://docs.oracle.com/cd/E19205-01/820-0619/geojs/index.html) sowie [DeadLocks](https://docs.oracle.com/cd/E19205-01/820-0619/geokj/index.html) erkennt.
+ThreadSanitizer übernimmt hier die Funktion eines Tools, welches [data races](https://docs.oracle.com/cd/E19205-01/820-0619/geojs/index.html) sowie [DeadLocks](https://docs.oracle.com/cd/E19205-01/820-0619/geokj/index.html) erkennt.\
 Je nach Situation ist ein slowdown von 5x-15x sowie ein Speicher overhead von 5x-10x zu erwarten.
 
 Bis heute ist ThreadSanitizer in der Betaphase, insgesamt aber dafür bekannt zuverlässig in großen C++ Projekten unter Verwendung von pthreads zu funktionieren.
@@ -102,15 +102,17 @@ Bis heute ist ThreadSanitizer in der Betaphase, insgesamt aber dafür bekannt zu
 Der oben genannte slowdown und overhead kann je nach Anwendung kritisch sein, es ist zu empfehlen dies vorher zu prüfen.
 
 Tsan bietet keinerlei Garantien dafür, dass data races gefunden werden und gefundene data races liefern keinen Beweis der Korrektheit ([K. Serebryany, Google](https://www.youtube.com/watch?v=5K_uIda0tZU)).
-Trotz, dass der ThreadSanitizer mittlerweile ausgereift und häufig verwendet wird, ist er nach wie vor in der Betaphase, erfährt jedoch aktive Entwicklung.
+Trotz, dass der ThreadSanitizer mittlerweile ausgereift und häufig verwendet wird, ist er nach wie vor in der Betaphase, erfährt jedoch aktive Entwicklung.\
 Die Deadlock Detection wird [Stand 2020, K. Serebryany, Google](https://github.com/google/sanitizers/issues/1258) seit circa 2015 leider nicht aktiv weiterentwickelt.
 Darüber hinaus gibt es auch zwei Versionen im Repository [Deadlock_detector1](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/sanitizer_common/sanitizer_deadlock_detector1.cpp) und [Deadlock_detector2](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/sanitizer_common/sanitizer_Deadlock_detector2.cpp).
 Diese liefern unterschiedliche Ergebnisse, insgesamt ist die [Deadlock Erkennung als Experimental](https://github.com/google/sanitizers/wiki/ThreadSanitizerDeadlockDetector) eingestuft.
-Inwiefern diese Funktionalität im Vergleich zu der data race Erkennung des Tsan eine Anwendung in der Industrie erfährt, konnte leider nicht in Erfahrung gebracht werden.
-Es ist außerdem nicht bekannt in welchem Rahmen die Deadlock Erkennung funktional ist, das lässt sich aus mehreren Stellen des LLVM repositories ableiten.
-[Insbesondere können keine Deadlocks erkannt werden, die wirklich passieren](https://github.com/llvm/llvm-project/blob/main/compiler-rt/test/tsan/must_deadlock.cpp). Das liegt daran, dass die Überprüfung des Graphen und damit die Erkennung des Deadlocks nach pthread_mutex_lock ausgeführt wird und sich das Programm entsprechend schon im Deadlock befindet.
 
-## Unterstütze Plattformen und Datentypen
+Inwiefern diese Funktionalität im Vergleich zu der data race Erkennung des Tsan eine Anwendung in der Industrie erfährt, konnte leider nicht in Erfahrung gebracht werden.
+Es ist außerdem nicht bekannt, in welchem Rahmen die Deadlock Erkennung funktional ist, das lässt sich aus mehreren Stellen des LLVM repositories ableiten.
+[Insbesondere können keine Deadlocks erkannt werden, die wirklich passieren](https://github.com/llvm/llvm-project/blob/main/compiler-rt/test/tsan/must_deadlock.cpp).
+Das liegt daran, dass die Überprüfung des Graphen und damit die Erkennung des Deadlocks nach pthread_mutex_lock ausgeführt wird und sich das Programm entsprechend schon im Deadlock befindet.
+
+## <a name="unterstuetzte Plattform"></a>Unterstütze Plattformen und Datentypen
 ### Plattformen
 
 - Android aarch64, x86_64
@@ -204,12 +206,12 @@ ThreadSanitizer: reported 1 warnings
 Process finished with exit code 66
 ```
 
-## Eigenständige Implementierung in C++
+## <a name="Eigenstaendige-Implementierung"></a>Eigenständige Implementierung in C++
 ### Algorithmus
 Die Idee des Goodlock Algorithmus ist es, mithilfe eines Graphen durch Zyklen, Deadlocks zu erkennen.
 Genauer gesagt, gibt es einen Graphen mit einer Adjazenzmatrix, der sich alle Kanten zwischen den Mutexen merkt.
 Jedes Mal, wenn ein Thread ein Mutex acquired oder released, wird der Graph aktualisieren.
-Falls über einen Thread ein Mutex gelockt werden soll, nachdem schon ein anderes Mutex gelockt wurde, wird an die Adjazenzmatrix aktualisiert.
+Falls über einen Thread ein Mutex gelockt werden soll, nachdem schon ein anderes Mutex gelockt wurde, wird die Adjazenzmatrix aktualisiert.
 
 Zum Beispiel: ein Thread möchte Mutex 1, nachdem er Mutex 0 gelockt hat, locken -> Kante in der Zeile 0 und in Spalte 1 wird auf 1 gesetzt.
 
@@ -219,14 +221,14 @@ Falls wir einen Zyklus gefunden haben, gibt es einen potenziellen Deadlock und w
 Dieser potenzielle Deadlock kann, je nachdem in welcher Reihenfolge die Threads durchgeführt werden, zu einem tatsächlichen Deadlock kommen.
 
 Zum Beispiel:
-  Thread 0 und Thread 1 werden nahezu gleichzeitig ausgeführt.
-  Thread 0 möchte zuerst Mutex 0 und dann Mutex 1 locken.
+  Thread 0 und Thread 1 werden nahezu gleichzeitig ausgeführt.\
+  Thread 0 möchte zuerst Mutex 0 und dann Mutex 1 locken.\
   Thread 1 möchte zuerst Mutex 1 und dann Mutex 0 locken.
   => Potenzieller Deadlock
 
 In dem Falle, dass es tatsächlich zu einem Deadlock kommt, kann dieser Deadlock über den Algorithmus nicht mehr erkannt werden, weil die Threads aufeinander warten.
 
-### Fälle, die bei dieser Implementierung nicht abgedeckt sind
+### <a name="Faelle"></a>Fälle, die bei dieser Implementierung nicht abgedeckt sind
 Die Fälle sind unter anderem in der [Testklasse](tests/test_my_deadlock_detection.cpp) implementiert und ergeben die gleichen falschen Ausgaben wie beim TSan.\
 #### Notation
   | Ausdruck | Bedeutung
@@ -256,7 +258,7 @@ Die Fälle sind unter anderem in der [Testklasse](tests/test_my_deadlock_detecti
 
 - Die Implementierung beachtet nicht, ob ein Zyklus tatsächlich zustande kommen kann.\
   So wird bei zwei Aufrufen mit zwei Threads, die beide zuerst Mutex 0 locken und danach zwei andere Mutexe in umgekehrter Lockreihenfolge locken, eine Warnmeldung ausgegeben.\
-  Obwohl dieser Zyklus nicht möglich ist, da Thread 2 auf Thread 1 warten wird, bis dieser Mutex 0 wieder freigibt, bevor er andere Mutexe lockt.
+  Obwohl dieser Zyklus nicht möglich ist, da Thread 1 auf Thread 0 warten wird, bis dieser Mutex 0 wieder freigibt, bevor er andere Mutexe lockt.
   
   | Aufruf | Lock | Unlock |
   |:-------------------:|:------------:|:----------------:|
@@ -266,18 +268,18 @@ Die Fälle sind unter anderem in der [Testklasse](tests/test_my_deadlock_detecti
 
 #### false negative
 - Die Implementierung erkennt keine verschachtelten Threads und deren Abhängigkeit zueinander.\
-  So wird bei einem Aufruf mit Thread t0 und seinem Subthread, die die Mutexe in umgekehrter Lockreihenfolge wie ein anderer Thread t1 locken, keine Warnmeldung ausgegeben.\
+  So wird bei einem Aufruf mit Thread 0 und seinem Subthread, die die Mutexe in umgekehrter Lockreihenfolge wie ein anderer Thread 1 locken, keine Warnmeldung ausgegeben.\
   Obwohl hier ein Zyklus und dadurch ein Deadlock entstehen kann.
 
   | Aufruf | Lock | Unlock |
   |:-------------------:|:------------:|:----------------:|
-  | Aufruf mit Thread 1: | 0 und starte Thread subThread | 0
+  | Aufruf mit Thread 0: | 0 und starte Thread subThread | 0
   | Aufruf mit Thread subThread: | 1 | 1
-  | Aufruf mit Thread 2: | 1 -> 0 | 0 -> 1
+  | Aufruf mit Thread 1: | 1 -> 0 | 0 -> 1
 
 #### Deadlock
 - Die Implementierung erkennt keinen Deadlock, wenn das Programm tatsächlich, während der Ausführung, in ein Deadlock endet.\
-  So bleibt bei einem Aufruf mit Thread t0, das Mutex 0 lockt und dann ein Subthread startet, welches Mutex 1 und 0 locken möchte, in einem Deadlock stecken.
+  So bleibt bei einem Aufruf mit Thread, das Mutex 0 lockt und dann ein Subthread startet, welches Mutex 1 und 0 locken möchte, in einem Deadlock stecken.
 
   | Aufruf | Lock | Unlock |
   |:-------------------:|:------------:|:----------------:|
@@ -289,9 +291,9 @@ Die Fälle sind unter anderem in der [Testklasse](tests/test_my_deadlock_detecti
 Anhand des Testbeispiels test_FourThreads_MoreCycles() wird die Anwendung erklärt.\
 Im Beispiel werden insgesamt 4 Threads mit unterschiedlicher Lockreihenfolge mit 3 Mutexen aufgerufen.\
 Am Ende der Ausführung werden immer INFO, Lock graph und HISTORY ausgegeben.
-Diese drei Ausgaben geben Informationen über die Ausführung der Threads, deren gelockten Mutexe, sowie ob es mindestens einen Zyklus gibt.\
+Diese drei Ausgaben geben Informationen über die Ausführung der Threads, deren gelockten Mutexe, sowie, ob es mindestens einen Zyklus gibt.
 
-- In der INFO steht, welche Threads noch welche Mutexe gelockt haben.\
+- In der INFO steht, welche Threads am Ende noch welche Mutexe gelockt haben.\
   Da im Beispiel alle Threads ihre Mutexe am Ende releasen, hält kein Thread nach der Ausführung noch ein Mutex.
 ```
   *** INFO ***
@@ -300,7 +302,7 @@ Diese drei Ausgaben geben Informationen über die Ausführung der Threads, deren
   Thread 2 holds the following locks:
   Thread 3 holds the following locks:
 ```
-- Der Lock graph gibt Auskunft, welche Mutexe verschachtelt gelockt werden.\
+- Der Lock graph gibt Auskunft, welche Mutexe über Threads verschachtelt gelockt wurden.\
   Wenn es eine Kante von Mutex x zu Mutex y und eine Kante in die andere Richtung gibt, dann gibt es ein Zyklus und eine Fehlermeldung wird ausgegeben.\
   In diesem Beispiel gibt es zwei Zyklen und die Fehlermeldung wird ausgegeben.\
   Der erste Zyklus ist zwischen Mutex 0 und Mutex 1.\
@@ -313,9 +315,8 @@ Diese drei Ausgaben geben Informationen über die Ausführung der Threads, deren
   2 --> 0
   *** cycle => potential deadlock !!! ***
 ```
-- Mit der HISTORY kann nachvollzogen werden, welche Operation, welcher Thread mit welchem Mutex, in einer bestimmten Reihenfolge, gemacht hat.\
-  Beispielhaft werden nun die ersten 4 Zeilen erklärt. Das gilt jedoch für jede weitere Zeile auch.
-
+- Mit der HISTORY kann nachvollzogen werden, welche Operation, welcher Thread mit welchem Mutex, in einer bestimmten Reihenfolge, durchgeführt hat.\
+  Beispielhaft werden nun die ersten 4 Zeilen erklärt. Das gilt jedoch für jede weitere Zeile auch.\
   Beim Aufruf 1 acquired der Thread T0 das Mutex M0\
   Beim Aufruf 2 acquired der Thread T0 das Mutex M1\
   Beim Aufruf 3 released der Thread T0 das Mutex M1\
@@ -342,37 +343,25 @@ Call      Operation      T0 holds       T1 holds       T2 holds       T3 holds
 
 Process finished with exit code 0
  ```
-In dieser Ausgabe sind die Zyklen markiert. Das ist jedoch kein Teil der Implementierung, sondern dient nur zur Veranschaulichung.\
+In dieser Ausgabe sind die Zyklen markiert. Das ist jedoch kein Teil der Implementierung, sondern dient nur zur Veranschaulichung.
 
 ![](Zyklenaufgemalt.png)
 
 
 ### Zusammenfassung der gewonnenen Erkenntnisse
-Diese grundlegende Implementierung kann durch Erweiterungen optimiert werden.
+Die Implementierung kann potenzielle Deadlocks erkennen, trotzdem könnte man sie durch Erweiterungen weiter optimieren. Im Rahmen dieser Projektarbeit wurde das nicht verfolgt.
 
 Bei dieser Implementierung acquiren Threads die Mutexe, jedoch wird diese Information nicht weiter verarbeitet.\
-So könnten, durch das Beachten der Thread ID, die obrigen Fälle, die durch das nicht Beachten falsche Ausgaben ergaben, korrekte Ausgaben ausgegeben werden.
+Indem man diese Informationen im Algorithmus mitverwenden würde, könnte man einige der [oben genannten Fälle](#a-namefaelleaflle-die-bei-dieser-implementierung-nicht-abgedeckt-sind), ausmerzen. Diese würden dann eine korrekte Ausgabe liefern.\
 Ein Beispiel dafür ist, dass eine Warnmeldung ausgegeben wird, auch wenn nur ein Thread jeweils zwei Mutexe in umgekehrter Reihenfolge lockt.
 
 Ein weiterer Punkt ist, dass die Abhängigkeit von verschachtelten Threads und deren gelockten Mutexen nicht erkannt wird.\
-Das könnte man lösen, indem man die Thread ID vom äußeren Thread dem inneren Thread mitgibt.
-So kann diese Zusatzinformation und somit die Abhängigkeiten beim Überprüfen auf Zyklen mitberücksichtigt werden.
+Das könnte man lösen, indem man die Thread ID vom äußeren Thread dem inneren Thread als Information mitgibt.
+Denn dann kann diese Zusatzinformation und somit die Abhängigkeiten beim Überprüfen auf Zyklen mitberücksichtigt werden.
 
-Zum Schluss gibt es noch das Problem, dass das Programm in einen tatsächlichen Deadlock geraten kann und so auch die Detektion von Deadlocks im Deadlock landet.
-Dann wird gar keine Ausgabe ausgegeben, denn der Algorithmus überprüft erst am Ende auf mögliche Zyklen und somit auf Deadlocks.\
-Da wir nicht zum Ende kommen, wird nichts ausgegeben.
-Für dieses Problem haben wir keine Lösung gefunden.
+Zum Schluss gibt es noch das Problem, dass das Programm in einen tatsächlichen Deadlock geraten kann. Ist das der Fall, so kann selbstverständlich auch keine Ausgabe erfolgen.\
+Das liegt darin begründet, dass der Algorithmus erst am Ende auf mögliche Zyklen prüft. Da wir nicht zum Ende kommen, wird nichts ausgegeben.\
+Ein Lösungsansatz beschäftigen sich mehr mit der Vermeidung eines kritischen Abschnitts.
+Zum Beispiel, indem man vorher prüft, ob bei der geplanten Aufrufreihenfolge (des nächsten acquires), ein Zyklus im Graph entstehen würde.
 
-
-
-
-
-
-
--Interessante Files:
-- [tsan_ilist.h](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/tsan/rtl/tsan_ilist.h)
-- [tsan_mutexset.cpp](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/tsan/rtl/tsan_mutexset.cpp)
-- [tsan_mutexset.h](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/tsan/rtl/tsan_mutexset.h)
-- [sanitizer_Deadlock_detector_interface.h](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/sanitizer_common/sanitizer_deadlock_detector_interface.h)
-- [sanitizer_Deadlock_detector1.cpp](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/sanitizer_common/sanitizer_deadlock_detector1.cpp)
-- [sanitizer_Deadlock_detector2.cpp](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/sanitizer_common/sanitizer_deadlock_detector2.cpp)
+Alle Optimierungen würden bessere Ergebnisse liefern, jedoch auch einen gewissen Overhead mit sich bringen.
