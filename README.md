@@ -299,24 +299,24 @@ Diese drei Ausgaben geben Informationen über die Ausführung der Threads, deren
 - In der INFO steht, welche Threads am Ende noch welche Mutexe gelockt haben.\
   Da im Beispiel alle Threads ihre Mutexe am Ende releasen, hält kein Thread nach der Ausführung noch ein Mutex.
 ```
-  *** INFO ***
-  Thread 0 holds the following locks:
-  Thread 1 holds the following locks:
-  Thread 2 holds the following locks:
-  Thread 3 holds the following locks:
+*** INFO ***
+Thread 0 holds the following locks:
+Thread 1 holds the following locks:
+Thread 2 holds the following locks:
+Thread 3 holds the following locks:
 ```
-- Der Lock graph gibt Auskunft, welche Mutexe über Threads verschachtelt gelockt wurden.\
+- Der LOCKGRAPH gibt Auskunft, welche Mutexe über Threads verschachtelt gelockt wurden.\
   Wenn es eine Kante von Mutex x zu Mutex y und eine Kante in die andere Richtung gibt, dann gibt es ein Zyklus und eine Fehlermeldung wird ausgegeben.\
   In diesem Beispiel gibt es zwei Zyklen und die Fehlermeldung wird ausgegeben.\
   Der erste Zyklus ist zwischen Mutex 0 und Mutex 1.\
   Der zweite Zyklus ist zwischen Mutex 0 und Mutex 2.
 ```
-  Lock graph:
-  0 --> 1
-  0 --> 2
-  1 --> 0
-  2 --> 0
-  *** cycle => potential deadlock !!! ***
+*** LOCKGRAPH ***
+0 --> 1
+0 --> 2
+1 --> 0
+2 --> 0
+*** cycle => potential deadlock !!! ***
 ```
 - Mit der HISTORY kann nachvollzogen werden, welche Operation, welcher Thread mit welchem Mutex, in einer bestimmten Reihenfolge, durchgeführt hat.\
   Beispielhaft werden nun die ersten 4 Zeilen erklärt. Das gilt jedoch für jede weitere Zeile auch.\
@@ -325,7 +325,7 @@ Diese drei Ausgaben geben Informationen über die Ausführung der Threads, deren
   Beim Aufruf 3 released der Thread T0 das Mutex M1\
   Beim Aufruf 4 released der Thread T0 das Mutex M0
 ```
- *** HISTORY ***
+*** HISTORY ***
 Call      Operation      T0 holds       T1 holds       T2 holds       T3 holds
 1         T0 acq M0      0
 2         T0 acq M1      0 1

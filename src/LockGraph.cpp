@@ -25,23 +25,23 @@ void LockGraph::init(MyThread **myThreads, MyMutex **myMutexes) {
  * Um nennenswerte Ergebnisse zu sehen, sollte diese Funktion nicht nur am Ende ausgeführt werden.
  */
 void LockGraph::info() {
-    std::cout << "\n *** INFO ***";
+    std::cout << "*** INFO ***" << std::endl;
     g.lock();
 
     for (auto &MapEntry: lockSet) {
-        std::cout << "\n Thread " << MapEntry.first << " holds the following locks:";
+        std::cout << "Thread " << MapEntry.first << " holds the following locks:" << std::endl;
         for (int i = 0; i < MAX_MUTEX; i++) {
             if (MapEntry.second.elem(i)) {
                 std::cout << " " << i;
             }
         }
     }
-
-    std::cout << "\n\n Lock graph:";
+    std::cout << std::endl;
+    std::cout << "*** LOCKGRAPH ***" << std::endl;
     for (int i = 0; i < MAX_MUTEX; i++) {
         for (int j = 0; j < MAX_MUTEX; j++) {
             if (edge[i][j]) {
-                std::cout << "\n " << i << " --> " << j;
+                std::cout << i << " --> " << j << std::endl;
             }
         }
     }
@@ -142,14 +142,17 @@ bool LockGraph::check() {
     }
     g.unlock();
     if (isCircle) {
-        std::cout << "\n *** cycle => potential deadlock !!! ***" << std::endl;
+        std::cout << "*** cycle => potential deadlock !!! ***" << std::endl << std::endl;
     }
     return isCircle;
 }
 
+/**
+ * Gibt die Historie der Operationen der Reihe nach aus. Mit den Zusatzinformationen welcher Thread und welches Mutex beteiligt sind.
+ */
 void LockGraph::printHistory() {
     g.lock();
-    std::cout << "\n *** HISTORY ***" << std::endl;
+    std::cout << "*** HISTORY ***" << std::endl;
 
     std::cout
             << std::left

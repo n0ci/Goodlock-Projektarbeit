@@ -1,7 +1,7 @@
 #include <map>
 
 /**
- * Die Klasse MySet enthält eine Map <int, bool> und funktionen, welche auf dieser Map arbeiten.
+ * Die Klasse MySet enthält eine Map <int, bool> und Funktionen, welche auf dieser Map arbeiten.
  * Im Wesentlichen repräsentiert die Map, ob ein Mutex ein gelocked ist, oder nicht.
  */
 class MySet {
@@ -36,8 +36,8 @@ public:
     }
 
     /**
-     * Gibt die Value für einen Key (MID) in mySet zurück. Falls Key nicht in Map mySet, wird ein K,V pair erstellt
-     * und eingefügt. In diesem Fall ist der return Wert standardmäßig false.
+     * Gibt die Value für einen Key (MID) in mySet zurück. Falls Key nicht in Map mySet, wird ein K,V pair erstellt und eingefügt.
+     * In diesem Fall ist der return Wert standardmäßig false.
      * Sollte nur in Sonderfällen verwendet werden.
      * @param mid Die ID des Mutex.
      * @return Wahrheitswert, sagt aus, ob das Mutex mit MID erworben wurde, oder nicht.
@@ -55,8 +55,8 @@ public:
     }
 
     /**
-     * Ändert die Value für einen Key (MID) in mySet auf true. Falls Key nicht in Map mySet, wird ein K,V pair erstellt
-     * und eingefügt. In diesem Fall ist der return Wert standardmäßig false.
+     * Ändert die Value für einen Key (MID) in mySet auf true. Falls Key nicht in Map mySet ist, wird ein K,V pair erstellt und eingefügt.
+     * In diesem Fall ist der return Wert standardmäßig false.
      * @param mid Die ID des Mutex.
      */
     void add_unsafe(int mid) {
