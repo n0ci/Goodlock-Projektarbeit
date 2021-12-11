@@ -1,32 +1,35 @@
 # Inhaltsverzeichnis
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+
 - [Inhaltsverzeichnis](#inhaltsverzeichnis)
 - [GoodLock-Projektarbeit](#goodlock-projektarbeit)
-  * [Einführung Projektarbeit](#a-nameeinfuehrung-paaeinfhrung-projektarbeit)
+	- [Einführung Projektarbeit](#einführung-projektarbeit)
 - [Hintergrundmaterial und Recherchen](#hintergrundmaterial-und-recherchen)
-  * [Wissenschaftliche Arbeiten und Paper](#wissenschaftliche-arbeiten-und-paper)
-  * [Beispiele](#beispiele)
-  * [Implementierungen](#implementierungen)
-  * [Diskussionen und Erklärungen](#a-namediskussionen-und-erklrungenadiskussionen-und-erklrungen)
+	- [Wissenschaftliche Arbeiten/Paper](#wissenschaftliche-arbeitenpaper)
+	- [Beispiele](#beispiele)
+	- [Implementierungen](#implementierungen)
+	- [Diskussionen und Erklärungen](#diskussionen-und-erklärungen)
 - [Verwendung von ThreadSanitizer und dessen GoodLock Implementierung](#verwendung-von-threadsanitizer-und-dessen-goodlock-implementierung)
-  * [Einführung TSan](#a-nameeinfuehrung-tsanaeinfhrung-tsan)
-  * [Problematiken](#problematiken)
-  * [Unterstütze Plattformen und Datentypen](#a-nameunterstuetzte-plattformauntersttze-plattformen-und-datentypen)
-    + [Plattformen](#plattformen)
-    + [Datentypen](#datentypen)
-  * [Einrichtung unter Windows](#einrichtung-unter-windows)
-  * [Ein Beispiel mit pthreads](#ein-beispiel-mit-pthreads)
-  * [Eigenständige Implementierung in C++](#a-nameeigenstaendige-implementierungaeigenstndige-implementierung-in-c)
-    + [Algorithmus](#algorithmus)
-    + [Fälle, die bei dieser Implementierung nicht abgedeckt sind](#a-namefaelleaflle-die-bei-dieser-implementierung-nicht-abgedeckt-sind)
-      - [Notation](#notation)
-      - [false positive](#false-positive)
-      - [false negative](#false-negative)
-      - [Deadlock](#deadlock)
-    + [Anwendung der Implementierung](#anwendung-der-implementierung)
-    + [Zusammenfassung der gewonnenen Erkenntnisse](#zusammenfassung-der-gewonnenen-erkenntnisse)
+	- [Einführung TSan](#einführung-tsan)
+	- [Problematiken](#problematiken)
+	- [Unterstütze Plattformen und Datentypen](#unterstütze-plattformen-und-datentypen)
+		- [Plattformen](#plattformen)
+		- [Datentypen](#datentypen)
+	- [Einrichtung unter Windows](#einrichtung-unter-windows)
+	- [Ein Beispiel mit pthreads](#ein-beispiel-mit-pthreads)
+	- [Eigenständige Implementierung in C++](#eigenständige-implementierung-in-c)
+		- [Algorithmus](#algorithmus)
+		- [Fälle, die bei dieser Implementierung nicht abgedeckt sind](#fälle-die-bei-dieser-implementierung-nicht-abgedeckt-sind)
+			- [Notation](#notation)
+			- [false positive](#false-positive)
+			- [false negative](#false-negative)
+			- [Deadlock](#deadlock)
+		- [Anwendung der Implementierung](#anwendung-der-implementierung)
+		- [Zusammenfassung der gewonnenen Erkenntnisse](#zusammenfassung-der-gewonnenen-erkenntnisse)
 
+<!-- /TOC -->
 # GoodLock-Projektarbeit
-## <a name="einfuehrung-pa"></a>Einführung Projektarbeit
+## Einführung Projektarbeit
 Im Rahmen dieser Projektarbeit arbeiten Marie Fiederlein und Fabio Nocera gemeinsam am Thema GoodLock. Betreut wird das Thema von Herrn Prof. Dr. Martin Sulzmann.
 
 GoodLock ist ein Algorithmus, welcher dazu dient Programmverhalten dynamisch zu analysieren und Deadlocks zu erkennen. Das Ziel ist es sich mit dem Algorithmus, der Funktionsweise, dem Einsatz und einer eigenen Implementierung zu beschäftigen.
@@ -72,7 +75,7 @@ Hierbei ist der schriftliche Teil in drei Teile untergliedert:
 - Tests aus dem Repository von LLVM.
    - [llvm-project/compiler-rt/test/tsan](https://github.com/llvm/llvm-project/tree/main/compiler-rt/test/tsan)
 
-## <a name="Diskussionen-und-Erklärungen"></a>Diskussionen und Erklärungen
+## Diskussionen und Erklärungen
 - Es wird über den Speicherplatzbedarf für das Speichern von geteilten Variablen und/oder Zugriffen des gemeinsamen Lesens von TSan diskutiert und wie das Löschen beim Überlauf gelöst ist.
    - [Speicherverwaltung von Tsan für seine gespeicherten Variablen](https://groups.google.com/g/thread-sanitizer/c/mB73m6Nltaw)
 - TSan entdeckt nur potenzielle Deadlocks. Falls tatsächlich ein Deadlock während des Tests auftritt, dann wird sich TSan aufhängen.
@@ -90,7 +93,7 @@ Hierbei ist der schriftliche Teil in drei Teile untergliedert:
    - [2015 LLVM Developers’ Meeting: K. Serebryany & P. Collingbourne "Beyond Sanitizers..."](https://www.youtube.com/watch?v=5K_uIda0tZU)
 
 # Verwendung von ThreadSanitizer und dessen GoodLock Implementierung
-## <a name="einfuehrung-tsan"></a>Einführung TSan
+## Einführung TSan
 Der ThreadSanitizer ist Teil des [LLVM Projects](https://llvm.org/), einer Sammlung von modularen und wiederverwendbaren compiler und toolchain Technologien sowie Teil von [gcc](https://gcc.gnu.org/) und [clang](https://clang.llvm.org/).
 Insbesondere ist der ThreadSanitizer Teil der Codebase von [compiler-rt](https://compiler-rt.llvm.org/) zusammen mit anderen Sanitizern, wie zum Beispiel der [AdressSanitizer](https://clang.llvm.org/docs/AddressSanitizer.html).
 ThreadSanitizer übernimmt hier die Funktion eines Tools, welches [data races](https://docs.oracle.com/cd/E19205-01/820-0619/geojs/index.html) sowie [DeadLocks](https://docs.oracle.com/cd/E19205-01/820-0619/geokj/index.html) erkennt.\
@@ -112,7 +115,7 @@ Es ist außerdem nicht bekannt, in welchem Rahmen die Deadlock Erkennung funktio
 [Insbesondere können keine Deadlocks erkannt werden, die wirklich passieren](https://github.com/llvm/llvm-project/blob/main/compiler-rt/test/tsan/must_deadlock.cpp).
 Das liegt daran, dass die Überprüfung des Graphen und damit die Erkennung des Deadlocks nach pthread_mutex_lock ausgeführt wird und sich das Programm entsprechend schon im Deadlock befindet.
 
-## <a name="unterstuetzte Plattform"></a>Unterstütze Plattformen und Datentypen
+## Unterstütze Plattformen und Datentypen
 ### Plattformen
 
 - Android aarch64, x86_64
@@ -206,7 +209,7 @@ ThreadSanitizer: reported 1 warnings
 Process finished with exit code 66
 ```
 
-## <a name="Eigenstaendige-Implementierung"></a>Eigenständige Implementierung in C++
+## Eigenständige Implementierung in C++
 ### Algorithmus
 Die Idee des Goodlock Algorithmus ist es, mithilfe eines Graphen durch Zyklen, Deadlocks zu erkennen.
 Genauer gesagt, gibt es einen Graphen mit einer Adjazenzmatrix, der sich alle Kanten zwischen den Mutexen merkt.
@@ -228,7 +231,7 @@ Zum Beispiel:
 
 In dem Falle, dass es tatsächlich zu einem Deadlock kommt, kann dieser Deadlock über den Algorithmus nicht mehr erkannt werden, weil die Threads aufeinander warten.
 
-### <a name="Faelle"></a>Fälle, die bei dieser Implementierung nicht abgedeckt sind
+### Fälle, die bei dieser Implementierung nicht abgedeckt sind
 Die Fälle sind unter anderem in der [Testklasse](tests/test_my_deadlock_detection.cpp) implementiert und ergeben die gleichen falschen Ausgaben wie beim TSan.\
 #### Notation
   | Ausdruck | Bedeutung
@@ -352,7 +355,7 @@ In dieser Ausgabe sind die Zyklen markiert. Das ist jedoch kein Teil der Impleme
 Die Implementierung kann potenzielle Deadlocks erkennen, trotzdem könnte man sie durch Erweiterungen weiter optimieren. Im Rahmen dieser Projektarbeit wurde das nicht verfolgt.
 
 Bei dieser Implementierung acquiren Threads die Mutexe, jedoch wird diese Information nicht weiter verarbeitet.\
-Indem man diese Informationen im Algorithmus mitverwenden würde, könnte man einige der [oben genannten Fälle](#a-namefaelleaflle-die-bei-dieser-implementierung-nicht-abgedeckt-sind), ausmerzen. Diese würden dann eine korrekte Ausgabe liefern.\
+Indem man diese Informationen im Algorithmus mitverwenden würde, könnte man einige der [oben genannten Fälle](#fälle-die-bei-dieser-implementierung-nicht-abgedeckt-sind), ausmerzen. Diese würden dann eine korrekte Ausgabe liefern.\
 Ein Beispiel dafür ist, dass eine Warnmeldung ausgegeben wird, auch wenn nur ein Thread jeweils zwei Mutexe in umgekehrter Reihenfolge lockt.
 
 Ein weiterer Punkt ist, dass die Abhängigkeit von verschachtelten Threads und deren gelockten Mutexen nicht erkannt wird.\
