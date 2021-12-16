@@ -49,8 +49,8 @@ mutex x, y, z;
  * @return default Wert 0
  */
 int main() {
-    test_simple_pthread_example();
-    //test_ClassicDeadlock();
+    //test_simple_pthread_example();
+    test_ClassicDeadlock();
     //test_TimeShiftDeadlock();
     //test_OnlyOneThread();
     //test_ThreeThreads();

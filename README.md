@@ -16,16 +16,16 @@
 		- [Plattformen](#plattformen)
 		- [Datentypen](#datentypen)
 	- [Einrichtung unter Windows](#einrichtung-unter-windows)
-	- [Ein Beispiel mit pthreads](#ein-beispiel-mit-pthreads)
+	- [Ein Beispiel mit threads](#ein-beispiel-mit-threads)
 	- [Eigenständige Implementierung in C++](#eigenständige-implementierung-in-c)
-		- [Algorithmus](#algorithmus)
-		- [Fälle, die bei dieser Implementierung nicht abgedeckt sind](#fälle-die-bei-dieser-implementierung-nicht-abgedeckt-sind)
-			- [Notation](#notation)
-			- [false positive](#false-positive)
-			- [false negative](#false-negative)
-			- [Deadlock](#deadlock)
-		- [Anwendung der Implementierung](#anwendung-der-implementierung)
-		- [Zusammenfassung der gewonnenen Erkenntnisse](#zusammenfassung-der-gewonnenen-erkenntnisse)
+        - [Algorithmus](#algorithmus)
+        - [Anwendung der Implementierung](#anwendung-der-implementierung)
+        - [Fälle, die bei dieser Implementierung nicht abgedeckt sind](#fälle-die-bei-dieser-implementierung-nicht-abgedeckt-sind)
+            - [Notation](#notation)
+            - [false positive](#false-positive)
+            - [false negative](#false-negative)
+            - [Deadlock](#deadlock)
+        - [Zusammenfassung der gewonnenen Erkenntnisse](#zusammenfassung-der-gewonnenen-erkenntnisse)
 
 <!-- /TOC -->
 # GoodLock-Projektarbeit
@@ -151,27 +151,34 @@ Zum Schluss übergeben wir noch zwei Flags an Tsan.
 
 Es ist nun möglich mit Tsan zu kompilieren.
 
-## Ein Beispiel mit pthreads
-Das folgende Beispiel erzeugt einen für ThreadSanitizer potenziellen Deadlock mit einem pthread.
+## Ein Beispiel mit threads
+Das folgende Beispiel erzeugt einen für ThreadSanitizer potenziellen Deadlock mit zwei threads.
 
 ```c++
-void test_simple_pthread_example() {
-    pthread_mutex_t px, py;
-    pthread_mutex_init(&px, NULL);
-    pthread_mutex_init(&py, NULL);
-    
-    pthread_mutex_lock(&px);
-    pthread_mutex_lock(&py);
-    pthread_mutex_unlock(&py);
-    pthread_mutex_unlock(&px);
-    
-    pthread_mutex_lock(&py);
-    pthread_mutex_lock(&px);
-    pthread_mutex_unlock(&px);
-    pthread_mutex_unlock(&py);
+void test_ClassicDeadlock() {
+    std::thread t0(help_Function_2Locks, 0);
+    std::thread t1(help_Function_2Locks, 1);
+    t0.join();
+    t1.join();
+}
 
-    pthread_mutex_destroy(&px);
-    pthread_mutex_destroy(&py);
+void help_Function_2Locks(int number) {
+    switch (number) {
+        case 0:
+            x.lock();
+            y.lock();
+            y.unlock();
+            x.unlock();
+            break;
+        case 1:
+            y.lock();
+            x.lock();
+            x.unlock();
+            y.unlock();
+            break;
+	default:
+	    break;
+    }
 }
 ```
 
@@ -179,30 +186,68 @@ Die Konsolenausgabe zeigt uns ebendies an:
 
 ```
 ==================
-WARNING: ThreadSanitizer: lock-order-inversion (potential deadlock) (pid=1714)
-  Cycle in lock order graph: M12 (0x7ffd4be1c970) => M13 (0x7ffd4be1c9a0) => M12
+WARNING: ThreadSanitizer: lock-order-inversion (potential deadlock) (pid=13148)
+  Cycle in lock order graph: M12 (0x558708eeb0c0) => M13 (0x558708eeb080) => M12
 
-  Mutex M13 acquired here while holding mutex M12 in main thread:
+  Mutex M13 acquired here while holding mutex M12 in thread T1:
     #0 pthread_mutex_lock ../../../../src/libsanitizer/sanitizer_common/sanitizer_common_interceptors.inc:4165 (libtsan.so.0+0x526fc)
-    #1 test_simple_pthread_example() /mnt/c/Users/marie/CLionProjects/Goodlock-Projektarbeit/tests/test_tsan_deadlock_detection.cpp:72 (GoodLock_Projektarbeit+0x3200)
-    #2 main /mnt/c/Users/marie/CLionProjects/Goodlock-Projektarbeit/tests/test_tsan_deadlock_detection.cpp:46 (GoodLock_Projektarbeit+0x29c6)
+    #1 __gthread_mutex_lock /usr/include/x86_64-linux-gnu/c++/9/bits/gthr-default.h:749 (GoodLock_Projektarbeit+0x2efb)
+    #2 std::mutex::lock() /usr/include/c++/9/bits/std_mutex.h:100 (GoodLock_Projektarbeit+0x2efb)
+    #3 help_Function_2Locks(int) /mnt/c/Users/marie/CLionProjects/Goodlock-Projektarbeit/tests/test_tsan_deadlock_detection.cpp:100 (GoodLock_Projektarbeit+0x2efb)
+    #4 void std::__invoke_impl<void, void (*)(int), int>(std::__invoke_other, void (*&&)(int), int&&) /usr/include/c++/9/bits/invoke.h:60 (GoodLock_Projektarbeit+0x4a41)
+    #5 std::__invoke_result<void (*)(int), int>::type std::__invoke<void (*)(int), int>(void (*&&)(int), int&&) /usr/include/c++/9/bits/invoke.h:95 (GoodLock_Projektarbeit+0x4a41)
+    #6 void std::thread::_Invoker<std::tuple<void (*)(int), int> >::_M_invoke<0ul, 1ul>(std::_Index_tuple<0ul, 1ul>) /usr/include/c++/9/thread:244 (GoodLock_Projektarbeit+0x4a41)
+    #7 std::thread::_Invoker<std::tuple<void (*)(int), int> >::operator()() /usr/include/c++/9/thread:251 (GoodLock_Projektarbeit+0x4a41)
+    #8 std::thread::_State_impl<std::thread::_Invoker<std::tuple<void (*)(int), int> > >::_M_run() /usr/include/c++/9/thread:195 (GoodLock_Projektarbeit+0x4a41)
+    #9 <null> <null> (libstdc++.so.6+0xd6de3)
 
   Mutex M12 previously acquired by the same thread here:
     #0 pthread_mutex_lock ../../../../src/libsanitizer/sanitizer_common/sanitizer_common_interceptors.inc:4165 (libtsan.so.0+0x526fc)
-    #1 test_simple_pthread_example() /mnt/c/Users/marie/CLionProjects/Goodlock-Projektarbeit/tests/test_tsan_deadlock_detection.cpp:71 (GoodLock_Projektarbeit+0x31f8)
-    #2 main /mnt/c/Users/marie/CLionProjects/Goodlock-Projektarbeit/tests/test_tsan_deadlock_detection.cpp:46 (GoodLock_Projektarbeit+0x29c6)
+    #1 __gthread_mutex_lock /usr/include/x86_64-linux-gnu/c++/9/bits/gthr-default.h:749 (GoodLock_Projektarbeit+0x2ee7)
+    #2 std::mutex::lock() /usr/include/c++/9/bits/std_mutex.h:100 (GoodLock_Projektarbeit+0x2ee7)
+    #3 help_Function_2Locks(int) /mnt/c/Users/marie/CLionProjects/Goodlock-Projektarbeit/tests/test_tsan_deadlock_detection.cpp:99 (GoodLock_Projektarbeit+0x2ee7)
+    #4 void std::__invoke_impl<void, void (*)(int), int>(std::__invoke_other, void (*&&)(int), int&&) /usr/include/c++/9/bits/invoke.h:60 (GoodLock_Projektarbeit+0x4a41)
+    #5 std::__invoke_result<void (*)(int), int>::type std::__invoke<void (*)(int), int>(void (*&&)(int), int&&) /usr/include/c++/9/bits/invoke.h:95 (GoodLock_Projektarbeit+0x4a41)
+    #6 void std::thread::_Invoker<std::tuple<void (*)(int), int> >::_M_invoke<0ul, 1ul>(std::_Index_tuple<0ul, 1ul>) /usr/include/c++/9/thread:244 (GoodLock_Projektarbeit+0x4a41)
+    #7 std::thread::_Invoker<std::tuple<void (*)(int), int> >::operator()() /usr/include/c++/9/thread:251 (GoodLock_Projektarbeit+0x4a41)
+    #8 std::thread::_State_impl<std::thread::_Invoker<std::tuple<void (*)(int), int> > >::_M_run() /usr/include/c++/9/thread:195 (GoodLock_Projektarbeit+0x4a41)
+    #9 <null> <null> (libstdc++.so.6+0xd6de3)
 
-  Mutex M12 acquired here while holding mutex M13 in main thread:
+  Mutex M12 acquired here while holding mutex M13 in thread T2:
     #0 pthread_mutex_lock ../../../../src/libsanitizer/sanitizer_common/sanitizer_common_interceptors.inc:4165 (libtsan.so.0+0x526fc)
-    #1 test_simple_pthread_example() /mnt/c/Users/marie/CLionProjects/Goodlock-Projektarbeit/tests/test_tsan_deadlock_detection.cpp:77 (GoodLock_Projektarbeit+0x3220)
-    #2 main /mnt/c/Users/marie/CLionProjects/Goodlock-Projektarbeit/tests/test_tsan_deadlock_detection.cpp:46 (GoodLock_Projektarbeit+0x29c6)
+    #1 __gthread_mutex_lock /usr/include/x86_64-linux-gnu/c++/9/bits/gthr-default.h:749 (GoodLock_Projektarbeit+0x2e57)
+    #2 std::mutex::lock() /usr/include/c++/9/bits/std_mutex.h:100 (GoodLock_Projektarbeit+0x2e57)
+    #3 help_Function_2Locks(int) /mnt/c/Users/marie/CLionProjects/Goodlock-Projektarbeit/tests/test_tsan_deadlock_detection.cpp:106 (GoodLock_Projektarbeit+0x2e57)
+    #4 void std::__invoke_impl<void, void (*)(int), int>(std::__invoke_other, void (*&&)(int), int&&) /usr/include/c++/9/bits/invoke.h:60 (GoodLock_Projektarbeit+0x4a41)
+    #5 std::__invoke_result<void (*)(int), int>::type std::__invoke<void (*)(int), int>(void (*&&)(int), int&&) /usr/include/c++/9/bits/invoke.h:95 (GoodLock_Projektarbeit+0x4a41)
+    #6 void std::thread::_Invoker<std::tuple<void (*)(int), int> >::_M_invoke<0ul, 1ul>(std::_Index_tuple<0ul, 1ul>) /usr/include/c++/9/thread:244 (GoodLock_Projektarbeit+0x4a41)
+    #7 std::thread::_Invoker<std::tuple<void (*)(int), int> >::operator()() /usr/include/c++/9/thread:251 (GoodLock_Projektarbeit+0x4a41)
+    #8 std::thread::_State_impl<std::thread::_Invoker<std::tuple<void (*)(int), int> > >::_M_run() /usr/include/c++/9/thread:195 (GoodLock_Projektarbeit+0x4a41)
+    #9 <null> <null> (libstdc++.so.6+0xd6de3)
 
   Mutex M13 previously acquired by the same thread here:
     #0 pthread_mutex_lock ../../../../src/libsanitizer/sanitizer_common/sanitizer_common_interceptors.inc:4165 (libtsan.so.0+0x526fc)
-    #1 test_simple_pthread_example() /mnt/c/Users/marie/CLionProjects/Goodlock-Projektarbeit/tests/test_tsan_deadlock_detection.cpp:76 (GoodLock_Projektarbeit+0x3218)
-    #2 main /mnt/c/Users/marie/CLionProjects/Goodlock-Projektarbeit/tests/test_tsan_deadlock_detection.cpp:46 (GoodLock_Projektarbeit+0x29c6)
+    #1 __gthread_mutex_lock /usr/include/x86_64-linux-gnu/c++/9/bits/gthr-default.h:749 (GoodLock_Projektarbeit+0x2e43)
+    #2 std::mutex::lock() /usr/include/c++/9/bits/std_mutex.h:100 (GoodLock_Projektarbeit+0x2e43)
+    #3 help_Function_2Locks(int) /mnt/c/Users/marie/CLionProjects/Goodlock-Projektarbeit/tests/test_tsan_deadlock_detection.cpp:105 (GoodLock_Projektarbeit+0x2e43)
+    #4 void std::__invoke_impl<void, void (*)(int), int>(std::__invoke_other, void (*&&)(int), int&&) /usr/include/c++/9/bits/invoke.h:60 (GoodLock_Projektarbeit+0x4a41)
+    #5 std::__invoke_result<void (*)(int), int>::type std::__invoke<void (*)(int), int>(void (*&&)(int), int&&) /usr/include/c++/9/bits/invoke.h:95 (GoodLock_Projektarbeit+0x4a41)
+    #6 void std::thread::_Invoker<std::tuple<void (*)(int), int> >::_M_invoke<0ul, 1ul>(std::_Index_tuple<0ul, 1ul>) /usr/include/c++/9/thread:244 (GoodLock_Projektarbeit+0x4a41)
+    #7 std::thread::_Invoker<std::tuple<void (*)(int), int> >::operator()() /usr/include/c++/9/thread:251 (GoodLock_Projektarbeit+0x4a41)
+    #8 std::thread::_State_impl<std::thread::_Invoker<std::tuple<void (*)(int), int> > >::_M_run() /usr/include/c++/9/thread:195 (GoodLock_Projektarbeit+0x4a41)
+    #9 <null> <null> (libstdc++.so.6+0xd6de3)
 
-SUMMARY: ThreadSanitizer: lock-order-inversion (potential deadlock) /mnt/c/Users/marie/CLionProjects/Goodlock-Projektarbeit/tests/test_tsan_deadlock_detection.cpp:72 in test_simple_pthread_example()
+  Thread T1 (tid=13150, finished) created by main thread at:
+    #0 pthread_create ../../../../src/libsanitizer/tsan/tsan_interceptors_posix.cpp:962 (libtsan.so.0+0x5ea79)
+    #1 std::thread::_M_start_thread(std::unique_ptr<std::thread::_State, std::default_delete<std::thread::_State> >, void (*)()) <null> (libstdc++.so.6+0xd70a8)
+    #2 main /mnt/c/Users/marie/CLionProjects/Goodlock-Projektarbeit/tests/test_tsan_deadlock_detection.cpp:53 (GoodLock_Projektarbeit+0x2a73)
+
+  Thread T2 (tid=13151, running) created by main thread at:
+    #0 pthread_create ../../../../src/libsanitizer/tsan/tsan_interceptors_posix.cpp:962 (libtsan.so.0+0x5ea79)
+    #1 std::thread::_M_start_thread(std::unique_ptr<std::thread::_State, std::default_delete<std::thread::_State> >, void (*)()) <null> (libstdc++.so.6+0xd70a8)
+    #2 main /mnt/c/Users/marie/CLionProjects/Goodlock-Projektarbeit/tests/test_tsan_deadlock_detection.cpp:53 (GoodLock_Projektarbeit+0x2a73)
+
+SUMMARY: ThreadSanitizer: lock-order-inversion (potential deadlock) /usr/include/x86_64-linux-gnu/c++/9/bits/gthr-default.h:749 in __gthread_mutex_lock
 ==================
 ThreadSanitizer: reported 1 warnings
 
@@ -230,65 +275,6 @@ Zum Beispiel:
   => Potenzieller Deadlock
 
 In dem Falle, dass es tatsächlich zu einem Deadlock kommt, kann dieser Deadlock über den Algorithmus nicht mehr erkannt werden, weil die Threads aufeinander warten.
-
-### Fälle, die bei dieser Implementierung nicht abgedeckt sind
-Die Fälle sind unter anderem in der [Testklasse](tests/test_my_deadlock_detection.cpp) implementiert und ergeben die gleichen falschen Ausgaben wie beim TSan.\
-#### Notation
-  | Ausdruck | Bedeutung
-  |:---------|:-------|
-  | Lock: 0 -> 1| Zuerst wird das Mutex 0 und anschließend Mutex 1 vom aufrufenden Thread gelocked
-  | Unlock: 1 -> 0 | Zuerst wird das Mutex 1 und anschließend das Mutex 0 vom aufrufenden Thread entlocked
-  | Lock: 0 -> 1 -> 2 | Zuerst wird das Mutex 0, dann das Mutex 1 und dann das Mutex 2 vom aufrufenden Thread gelocked
-#### false positive
-- Die Implementierung beachtet nicht, welcher Thread, welches Mutex aufruft.\
-  So wird bei einem Aufruf mit einem Thread bei 2 Aufrufen in umgekehrter Lockreihenfolge mit zwei Mutexen auch eine Warnmeldung ausgegeben.\
-  Obwohl dieser Zyklus mit einem Thread zu keinem Problem führt.
-
-  | Aufruf | Lock | Unlock |
-  |:-------------------:|:------------:|:----------------:|
-  | Erster Aufruf | 0 -> 1 | 1 -> 0
-  | Zweiter Aufruf | 1 -> 0 | 0 -> 1
-
-- Die Implementierung beachtet die Zeitabstände nicht.\
-  So wird bei Aufrufen mit zwei Threads, die mit einer Sekunde Verzögerung zwei Mutexe in umgekehrter Lockreihenfolge locken wollen, eine Warnmeldung ausgegeben.\
-  Obwohl dieser Zyklus durch die Zeitverzögerung nicht möglich ist.
-  
-  | Aufruf | Lock | Unlock |
-  |:-------------------:|:------------:|:----------------:|
-  | Aufruf mit Thread 0: | 0 -> 1 | 1 -> 0
-  | Thread 1 schläft| | |
-  | Aufruf mit Thread 1: | 1 -> 0 | 0 -> 1
-
-- Die Implementierung beachtet nicht, ob ein Zyklus tatsächlich zustande kommen kann.\
-  So wird bei zwei Aufrufen mit zwei Threads, die beide zuerst Mutex 0 locken und danach zwei andere Mutexe in umgekehrter Lockreihenfolge locken, eine Warnmeldung ausgegeben.\
-  Obwohl dieser Zyklus nicht möglich ist, da Thread 1 auf Thread 0 warten wird, bis dieser Mutex 0 wieder freigibt, bevor er andere Mutexe lockt.
-  
-  | Aufruf | Lock | Unlock |
-  |:-------------------:|:------------:|:----------------:|
-  | Aufruf mit Thread 0: | 0 -> 1 -> 2 | 2 -> 1 -> 0
-  | Aufruf mit Thread 1: | 0 -> 2 -> 1 | 1 -> 2 -> 0
-
-
-#### false negative
-- Die Implementierung erkennt keine verschachtelten Threads und deren Abhängigkeit zueinander.\
-  So wird bei einem Aufruf mit Thread 0 und seinem Subthread, die die Mutexe in umgekehrter Lockreihenfolge wie ein anderer Thread 1 locken, keine Warnmeldung ausgegeben.\
-  Obwohl hier ein Zyklus und dadurch ein Deadlock entstehen kann.
-
-  | Aufruf | Lock | Unlock |
-  |:-------------------:|:------------:|:----------------:|
-  | Aufruf mit Thread 0: | 0 und starte Thread subThread | 0
-  | Aufruf mit Thread subThread: | 1 | 1
-  | Aufruf mit Thread 1: | 1 -> 0 | 0 -> 1
-
-#### Deadlock
-- Die Implementierung erkennt keinen Deadlock, wenn das Programm tatsächlich, während der Ausführung, in ein Deadlock endet.\
-  So bleibt bei einem Aufruf mit Thread, das Mutex 0 lockt und dann ein Subthread startet, welches Mutex 1 und 0 locken möchte, in einem Deadlock stecken.
-
-  | Aufruf | Lock | Unlock |
-  |:-------------------:|:------------:|:----------------:|
-  | Aufrufender Thread: | 0 | 0
-  | Aufruf mit subThread: | 0 -> 1 | 1 -> 0
-  
 
 ### Anwendung der Implementierung
 Anhand des Testbeispiels test_FourThreads_MoreCycles() wird die Anwendung erklärt.\
@@ -350,6 +336,63 @@ In dieser Ausgabe sind die Zyklen markiert. Das ist jedoch kein Teil der Impleme
 
 ![](Zyklenaufgemalt.png)
 
+### Fälle, die bei dieser Implementierung nicht abgedeckt sind
+Die Fälle sind unter anderem in der [Testklasse](tests/test_my_deadlock_detection.cpp) implementiert und ergeben die gleichen falschen Ausgaben wie beim TSan.\
+#### Notation
+  | Ausdruck | Bedeutung
+  |:---------|:-------|
+  | Lock: 0 -> 1| Zuerst wird das Mutex 0 und anschließend Mutex 1 vom aufrufenden Thread gelocked
+  | Unlock: 1 -> 0 | Zuerst wird das Mutex 1 und anschließend das Mutex 0 vom aufrufenden Thread entlocked
+  | Lock: 0 -> 1 -> 2 | Zuerst wird das Mutex 0, dann das Mutex 1 und dann das Mutex 2 vom aufrufenden Thread gelocked
+
+#### false positive
+- Die Implementierung beachtet nicht, welcher Thread, welches Mutex aufruft.\
+  So wird bei einem Aufruf mit einem Thread bei 2 Aufrufen in umgekehrter Lockreihenfolge mit zwei Mutexen auch eine Warnmeldung ausgegeben.\
+  Obwohl dieser Zyklus mit einem Thread zu keinem Problem führt.
+
+  | Aufruf | Lock | Unlock |
+  |:-------------------:|:------------:|:----------------:|
+  | Erster Aufruf | 0 -> 1 | 1 -> 0
+  | Zweiter Aufruf | 1 -> 0 | 0 -> 1
+
+- Die Implementierung beachtet die Zeitabstände nicht.\
+  So wird bei Aufrufen mit zwei Threads, die mit einer Sekunde Verzögerung zwei Mutexe in umgekehrter Lockreihenfolge locken wollen, eine Warnmeldung ausgegeben.\
+  Obwohl dieser Zyklus durch die Zeitverzögerung nicht möglich ist.
+  
+  | Aufruf | Lock | Unlock |
+  |:-------------------:|:------------:|:----------------:|
+  | Aufruf mit Thread 0: | 0 -> 1 | 1 -> 0
+  | Thread 1 schläft| | |
+  | Aufruf mit Thread 1: | 1 -> 0 | 0 -> 1
+
+- Die Implementierung beachtet nicht, ob ein Zyklus tatsächlich zustande kommen kann.\
+  So wird bei zwei Aufrufen mit zwei Threads, die beide zuerst Mutex 0 locken und danach zwei andere Mutexe in umgekehrter Lockreihenfolge locken, eine Warnmeldung ausgegeben.\
+  Obwohl dieser Zyklus nicht möglich ist, da Thread 1 auf Thread 0 warten wird, bis dieser Mutex 0 wieder freigibt, bevor er andere Mutexe lockt.
+  
+  | Aufruf | Lock | Unlock |
+  |:-------------------:|:------------:|:----------------:|
+  | Aufruf mit Thread 0: | 0 -> 1 -> 2 | 2 -> 1 -> 0
+  | Aufruf mit Thread 1: | 0 -> 2 -> 1 | 1 -> 2 -> 0
+
+#### false negative
+- Die Implementierung erkennt keine verschachtelten Threads und deren Abhängigkeit zueinander.\
+  So wird bei einem Aufruf mit Thread 0 und seinem Subthread, die die Mutexe in umgekehrter Lockreihenfolge wie ein anderer Thread 1 locken, keine Warnmeldung ausgegeben.\
+  Obwohl hier ein Zyklus und dadurch ein Deadlock entstehen kann.
+
+  | Aufruf | Lock | Unlock |
+  |:-------------------:|:------------:|:----------------:|
+  | Aufruf mit Thread 0: | 0 und starte Thread subThread | 0
+  | Aufruf mit Thread subThread: | 1 | 1
+  | Aufruf mit Thread 1: | 1 -> 0 | 0 -> 1
+
+#### Deadlock
+- Die Implementierung erkennt keinen Deadlock, wenn das Programm tatsächlich, während der Ausführung, in ein Deadlock endet.\
+  So bleibt bei einem Aufruf mit Thread, das Mutex 0 lockt und dann ein Subthread startet, welches Mutex 1 und 0 locken möchte, in einem Deadlock stecken.
+
+  | Aufruf | Lock | Unlock |
+  |:-------------------:|:------------:|:----------------:|
+  | Aufrufender Thread: | 0 | 0
+  | Aufruf mit subThread: | 0 -> 1 | 1 -> 0
 
 ### Zusammenfassung der gewonnenen Erkenntnisse
 Die Implementierung kann potenzielle Deadlocks erkennen, trotzdem könnte man sie durch Erweiterungen weiter optimieren. Im Rahmen dieser Projektarbeit wurde das nicht verfolgt.
